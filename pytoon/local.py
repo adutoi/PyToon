@@ -1,0 +1,2 @@
+inkscape = "inkscape"
+convert  = "convert"
