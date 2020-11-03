@@ -145,7 +145,7 @@ class entity(object):
                     if viewbox!=previous_viewbox:  raise RuntimeError("for now, all the frame viewboxes need to be the same (easy to fix!!)")
                 previous_viewbox = viewbox
             background = "" if (background is None) else background    # bug here.  this is not parsed
-            description = "This file was created using the PyToon package by Anthony D. Dutoi [tonydutoi@gmail.com].\n" + util.js_code.svg_credit
+            description = "This file was created using the PyToon package by Anthony D. Dutoi [https://github.com/adutoi/PyToon, tonydutoi@gmail.com].\n" + util.js_code.svg_credit
             step, key_controls, button, location = parse_svg_animation_controls(controls)
             step = 1.001*duration/global_frames
             if button:

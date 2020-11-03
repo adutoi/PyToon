@@ -4,13 +4,14 @@ LOGO (animated svg)
 
 PyToon is a python-based utility for making line-art animations and drawings.
 
-(C) Copyright 2012, 2013, 2015, 2016, 2018, 2020 Anthony D. Dutoi (tonydutoi@gmail.com)
+&copy; Copyright 2012, 2013, 2015, 2016, 2018, 2020 Anthony D. Dutoi (tonydutoi@gmail.com)
 
 
 
 ##     License
 
-This package is distributed under the terms of the [GPLv3](http://www.gnu.org/licenses/), the terms of which can be read in the `COPYING` file in this same directory, or at the linked URL.
+This package is distributed under the terms of the [GPLv3](http://www.gnu.org/licenses/),
+ which can be read in the `COPYING` file in this same directory, or at the linked URL.
 
 
 

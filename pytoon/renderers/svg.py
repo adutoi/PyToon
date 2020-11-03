@@ -122,10 +122,13 @@ class renderer_base(base.renderer):
         rgb, alpha, weight, dash = self._parse_line(lstyle)
         if self._duration is None:
             fill   = self._parse_fill(fstyle)
-            radius = _flt(radius)
             center_x, center_y = self._parse_point(center)
+            self._adjust_boundaries(center_x+radius, center_y+radius)
+            self._adjust_boundaries(center_x-radius, center_y-radius)
+            radius = _flt(radius)
             center_x, center_y = _flt(center_x), _flt(center_y)
         else:
+            # minor bug here since boundaries never adjusted (user can always put in phantom polygon)
             fill   = [(_flt(t),self._parse_fill(sty))  for t,sty in fstyle]
             radius = [(_flt(t),_flt(rad))              for t,rad in radius]
             center = [(_flt(t),self._parse_point(ctr)) for t,ctr in center]
@@ -248,7 +251,7 @@ class renderer_full(renderer_base):
         self._controls   = controls
         self._background = ""
     def finish(self):
-        cite_package = "This file was created using the PyToon package by Anthony D. Dutoi [tonydutoi@gmail.com].\n"
+        cite_package = "This file was created using the PyToon package by Anthony D. Dutoi [https://github.com/adutoi/PyToon, tonydutoi@gmail.com].\n"
         javascript, thanks = ("", ""), ""
         image_code = self._main
         if self._duration is not None:

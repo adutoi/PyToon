@@ -254,7 +254,7 @@ class circle(base.entity):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
         lstyle = _linestyle(parameters.lstyle, anim_wrap)
         fstyle = _fillstyle(parameters.fstyle, anim_wrap)
-        radius = anim_wrap(  1   if (parameters.radius is None) else parameters.radius)
+        radius = anim_wrap( 100  if (parameters.radius is None) else parameters.radius)
         center = anim_wrap((0,0) if (parameters.center is None) else parameters.center)
         lstyle = _render_lstyle(lstyle, transform, center, time)
         fstyle = _render_fstyle(fstyle, time)
