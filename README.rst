@@ -5,39 +5,121 @@
 
 
 
-.. include:: <isonum.txt>
+.. role::  raw-html(raw)
+    :format: html
 
-Pytoon
-======
-
-LOGO (animated svg)
-
-PyToon is a python-based utility for making line-art animations and drawings.
-
-|copy| Copyright 2012, 2013, 2015, 2016, 2018, 2020 Anthony D. Dutoi (tonydutoi@gmail.com)
-
-
-
-This is a placeholder
----------------------
-
-I'm experimenting with conversion from ``.md`` to ``.rst``.  Does this image show up?
+PyToon
+================================================================================
 
 .. image:: ./docs/samples/5-water-wave/water-wave.svg
   :width: 600
   :align: center
   :alt: waves on water showing elliptical particle trajectories and seaweed
 
+*PyToon* is a python-based utility for making line-art animations and drawings.
 
 
-License
--------
 
-Library source code:  `GPLv3 <http://www.gnu.org/licenses/>`_
+Description
+-----------
 
-Documentation (including this file): `CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>`_
+*PyToon* acts like a declarative vector graphics language, composed by 
+instantiating and nesting python objects that represent graphical entities.
+The motivation is to allow one to use the full power of python to compute
+and resolve the image parameters.
+It would, for example, be suitable for making complex scientific plots where
+some custom plotting feature has not yet been otherwise invented or implemented.
 
-See the file `LICENSE` in this same directory for further information.
+**Features**
+
+* universal defaults and liberal syntax for property specifications
+* easy cloning of custom composite entities
+* dyanamic customization of entity properties though the use of variables
+* arbitrary user-defined transformations of the coordinate space
+* animations (also animations of transformations) specified with minimal
+  information
+* it's light-weight (the *Jupyter* notebook tests and samples outweigh the
+  python library source code)
+
+
+
+Usage
+-----
+
+quick start
+^^^^^^^^^^^
+
+```python
+from pytoon import some, stuff
+
+place_holder_for(making_something_cool)
+```
+
+full documentation
+^^^^^^^^^^^^^^^^^^
+
+After cloning, point your browser to the file `docs/html/index.html` 
+(also hosted on ReadTheDocs(link!)).  See also the `docs/samples/` directory.
+
+
+
+Installation
+------------
+
+Aside from cloning this and making sure the project directory is in your Python
+search path,  just hang on while I pip-ify it (today = 5.Nov.2020).
+
+dependencies
+^^^^^^^^^^^^
+
+If you only want to render to svg, then none.  If you want to output to jpg or
+pdf (static images only), then ImageMagick and Inkscape will need to be 
+available in the environment.
+
+So far this has only been tested for python>=3.7 on *nix systems (specifically
+Linux/Mac).
+
+support
+^^^^^^^
+
+Email tonydutoi@gmail.com, and I'll do what I can.
+
+
+
+Testing and Development
+-----------------------
+
+testing
+^^^^^^^
+
+In the ``tests/`` directories there are some *Jupyter* notebook ``.ipynb``
+files, each with some in-place instructions on what is being tested.
+
+contributing
+^^^^^^^^^^^^
+
+In theory, I welcome collaboration.
+In practice, you will have to be very self-sufficient and patient, as this 
+is an intermittent side project.
+If this project catches your interest, and you can work like that, great!
+
+to-do list
+^^^^^^^^^^
+
+* This list
+* is on
+* the to-do list.
+
+
+
+Copyright and License
+---------------------
+
+:raw-html:`&copy;` Copyright 2012, 2013, 2015, 2016, 2018, 2020 Anthony D. Dutoi (tonydutoi@gmail.com)
+
+| Library source code:  `GPLv3 <http://www.gnu.org/licenses/>`_
+| Documentation (including this file): `CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>`_
+| See the `LICENSE` file in this same directory for further information.
 
 
 
@@ -45,7 +127,7 @@ See the file `LICENSE` in this same directory for further information.
 
     <p>
     <br />
-    |copy| Copyright 2020 Anthony D. Dutoi
+    &copy; Copyright 2020 Anthony D. Dutoi
     <br />
     <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
     <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" />
