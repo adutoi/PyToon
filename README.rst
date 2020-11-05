@@ -49,6 +49,16 @@ Usage
 quick start
 ^^^^^^^^^^^
 
+.. code-block:: python
+
+    from pytoon import circle
+
+    circle().svg()
+
+.. image:: samples/1-circle/pytoon_graphic.svg
+  :width: 400
+  :alt: one circle, no fill
+
 The code and resulting image above show the simplest possible use case of
 *PyToon*.
 The ``.svg`` method renders the image represented by an object of ``circle`` 
