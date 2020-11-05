@@ -1,0 +1,11 @@
+The files comprising the PyToon library source code and its documentation
+are protected by copyright, as indicated for each file.
+
+The source code of the library is licensed under the GNU General
+Public License as published by the Free Software Foundation, version 3.
+For more details, see the file COPYING.GPLv3.  If absent, see
+http://www.gnu.org/licenses/.
+
+The documentation (including component text, images, and code examples) is
+licensed under a Creative Commons Attribution-ShareAlike 4.0
+International License (see http://creativecommons.org/licenses/by-sa/4.0/).

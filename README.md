@@ -10,8 +10,11 @@ PyToon is a python-based utility for making line-art animations and drawings.
 
 ##     License
 
-This package is distributed under the terms of the [GPLv3](http://www.gnu.org/licenses/),
- which can be read in the `COPYING` file in this same directory, or at the linked URL.
+Library source code:  [GPLv3](http://www.gnu.org/licenses/)
+
+Documentation: [CC-BY-SA](http://creativecommons.org/licenses/by-sa/4.0/)
+
+See the file `LICENSE` in this same directory for further information.
 
 
 
@@ -34,7 +37,7 @@ place_holder_for(making_something_cool)
 
 ### Full Documentation
 
-After cloning, point your browser to the file `docs/index.html`.  See also the `samples/` directory.
+After cloning, point your browser to the file `docs/html/index.html` (also hosted on ReadTheDocs(link!)).  See also the `docs/samples/` directory.
 
 
 
