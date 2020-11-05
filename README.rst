@@ -55,7 +55,7 @@ quick start
 
     circle().svg()
 
-.. image:: samples/1-circle/pytoon_graphic.svg
+.. image:: ./docs/samples/1-circle/pytoon_graphic.svg
   :width: 400
   :alt: one circle, no fill
 
@@ -78,8 +78,15 @@ image.
 A ``composite`` entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:
 
-.. literalinclude:: ./docs/samples/2-composite/code.py
-  :language: python
+.. code-block:: python
+
+    from pytoon import composite, line, circle
+
+    composite([
+        line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
+        circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
+        circle(center=(+30,0), radius=100, lstyle=False, fstyle="0.8 * green")
+    ]).svg("two-circles")
 
 .. image:: ./docs/samples/2-composite/two-circles.svg
   :width: 600
@@ -116,8 +123,17 @@ The call signature is the same as for instantiation, where any supplied
 arguments override the "defaults" set by the called object.
 So we could have written the above as:
 
-.. literalinclude:: ./docs/samples/2-composite/code-alt.py
-  :language: python
+.. code-block:: python
+
+    from pytoon import composite, line, circle
+
+    my_circle = circle(radius=100, lstyle=False, fstyle="salmon")
+
+    composite([
+        line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
+        my_circle(center=(-30,0)),
+        my_circle(center=(+30,0), fstyle="0.8 * green")
+    ]).svg("two-circles-alt")
 
 variable substitution
 """""""""""""""""""""
@@ -125,8 +141,29 @@ variable substitution
 This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied ``composite``, for example.
 
-.. literalinclude:: ./docs/samples/3-variables/code.py
-  :language: python
+.. code-block:: python
+
+    from pytoon import composite, line, circle
+
+    sub_image = composite([
+        line(begin=(-150,0), end=(+150,0), lstyle=("WEIGHT","#A0522D")),
+        circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
+        circle(center=(+30,0), radius=100, lstyle=False, fstyle="GREEN")
+    ])
+
+    image = composite([
+        sub_image(GREEN="0.1*green"),
+        sub_image(GREEN="0.2*green").T(  0, 110),
+        sub_image(GREEN="0.3*green").T(  0, 220),
+        sub_image(GREEN="0.4*green").T(300,   0),
+        sub_image(GREEN="0.5*green").T(300, 110),
+        sub_image(GREEN="0.6*green").T(300, 220),
+        sub_image(GREEN="0.7*green").T(600,   0),
+        sub_image(GREEN="0.8*green").T(600, 110),
+        sub_image(GREEN="0.9*green").T(600, "Two20")
+    ], WEIGHT=30, Two20=220).R(20)
+
+    image.svg()
 
 .. image:: ./docs/samples/3-variables/pytoon_graphic.svg
   :width: 600
@@ -161,8 +198,21 @@ One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.
 
-.. literalinclude:: ./docs/samples/4-animation/code.py
-  :language: python
+.. code-block:: python
+
+    import math
+    from pytoon import composite, circle, polygon, animated
+
+    def c(_t_):
+        x = 50 * math.cos(2*math.pi * _t_)
+        return (x,0)
+
+    image = composite([
+        polygon(points=[(-200,-110), (-200,110), (200,110), (200,-110)], lstyle=False, fstyle="tan"),
+        circle(center=animated(c,Dt=0.05))
+        ])
+
+    image.svg(time=(0,1), duration=2)
 
 .. image:: ./docs/samples/4-animation/pytoon_graphic.svg
   :width: 600
