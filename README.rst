@@ -68,7 +68,7 @@ image.
 A ``composite`` entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:
 
-.. literalinclude:: samples/2-composite/code.py
+.. literalinclude:: ./docs/samples/2-composite/code.py
   :language: python
 
 .. image:: ./docs/samples/2-composite/two-circles.svg
@@ -91,7 +91,7 @@ is graphical, a couple of points deserve mention:
   ``0.8`` multiplier for the green color causes it to be semi-transparent.
 * entities are layered in the order they are defined (last given is on top of
   all others).
-* this time, a file name (\ |rarr| ``two-circles.svg``) is specified for the 
+* this time, a file name (\ :raw-html:`&rarr; ``two-circles.svg``) is specified for the 
   output.
 
 copy-generated entities
@@ -106,7 +106,7 @@ The call signature is the same as for instantiation, where any supplied
 arguments override the "defaults" set by the called object.
 So we could have written the above as:
 
-.. literalinclude:: samples/2-composite/code-alt.py
+.. literalinclude:: ./docs/samples/2-composite/code-alt.py
   :language: python
 
 variable substitution
@@ -115,7 +115,7 @@ variable substitution
 This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied ``composite``, for example.
 
-.. literalinclude:: samples/3-variables/code.py
+.. literalinclude:: ./docs/samples/3-variables/code.py
   :language: python
 
 .. image:: ./docs/samples/3-variables/pytoon_graphic.svg
@@ -151,7 +151,7 @@ One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.
 
-.. literalinclude:: samples/4-animation/code.py
+.. literalinclude:: ./docs/samples/4-animation/code.py
   :language: python
 
 .. image:: ./docs/samples/4-animation/pytoon_graphic.svg
@@ -268,6 +268,8 @@ Copyright and License
 | See the `LICENSE` file in this same directory for further information.
 
 
+
+----
 
 .. raw:: html
 
