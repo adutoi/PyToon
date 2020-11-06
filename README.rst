@@ -46,28 +46,29 @@ some custom plotting feature has not yet been otherwise invented or implemented.
 Usage
 -----
 
-quick start
-^^^^^^^^^^^
+quickstart
+^^^^^^^^^^
+
+.. image:: samples/1-circle/pytoon_graphic.svg
+    :width: 400
+    :align: left
+    :alt: one circle, no fill
 
 .. code-block:: python
 
     from pytoon import circle
-
+    
     circle().svg()
-
-.. image:: ./docs/samples/1-circle/pytoon_graphic.svg
-  :width: 400
-  :alt: one circle, no fill
 
 The code and resulting image above show the simplest possible use case of
 *PyToon*.
 The ``.svg`` method renders the image represented by an object of ``circle`` 
 class in the `SVG <https://en.wikipedia.org/wiki/Scalable_Vector_Graphics>`_
 graphics language, with the default local file name ``pytoon_graphic.svg``.
-Failing any supplied arguments, you get a "default circle" (radius of 100 
-points, black 1-point outline, with no fill).
+Failing any supplied arguments, you get a "default circle"
+(black, 1-point outline, with no fill, and a radius of 100 points).
 
-The object of ``circle`` class is an example of an *entity*.
+An object of ``circle`` class is an example of an *entity*.
 An *entity* is any "drawable" object.
 
 composite images
@@ -78,45 +79,42 @@ image.
 A ``composite`` entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:
 
+.. image:: samples/2-composite/pytoon_graphic.svg
+    :width: 600
+    :align: center
+    :alt: two filled circles over a line, one semi-transparent
+
 .. code-block:: python
 
     from pytoon import composite, line, circle
-
+    
     composite([
         line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
         circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
         circle(center=(+30,0), radius=100, lstyle=False, fstyle="0.8 * green")
     ]).svg("two-circles")
 
-.. image:: ./docs/samples/2-composite/two-circles.svg
-  :width: 600
-  :align: center
-  :alt: two filled circles over a line, one semi-transparent
-
 Though the syntax for the above is largely self-evident, given that the output
 is graphical, a couple of points deserve mention:
 
 * values for the ``lstyle`` and ``fstyle`` arguments, which style lines and
-  fills, respectively,
-  have a liberal interpretation 
-  (covered more later);
-  ``0``, ``"none"`` and
-  ``False`` would all work to turn off the outlines of the circles, and the 
-  order inside the tuple defining the brown line (weight and color,
-  respectively) could be swapped.
+  fills, respectively, have a liberal interpretation 
+  (covered in the full documentation);
+  ``0``, ``"none"`` and ``False`` would all work to turn off the outlines of 
+  the circles, and the order inside the tuple defining the brown line (weight
+  and color, respectively) could be swapped.
 * color syntax is also flexible; RGB codes or named colors can be used, and the
   ``0.8`` multiplier for the green color causes it to be semi-transparent.
 * entities are layered in the order they are defined (last given is on top of
   all others).
-* this time, a file name (\ :raw-html:`&rarr; ``two-circles.svg``) is specified for the 
+* this time, a file name (\ :raw-html:`&rarr;` ``two-circles.svg``) is specified for the 
   output.
 
 copy-generated entities
 """""""""""""""""""""""
 
 So far, this is just a declarative graphics language mapped to python, so
-let's have
-some fun using its python-ness.
+let's have some fun using its python-ness.
 To start with, every entity is callable, acting as a generator for copies of
 itself.
 The call signature is the same as for instantiation, where any supplied
@@ -126,14 +124,14 @@ So we could have written the above as:
 .. code-block:: python
 
     from pytoon import composite, line, circle
-
+    
     my_circle = circle(radius=100, lstyle=False, fstyle="salmon")
-
+    
     composite([
         line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
         my_circle(center=(-30,0)),
         my_circle(center=(+30,0), fstyle="0.8 * green")
-    ]).svg("two-circles-alt")
+    ]).svg("two-circles")
 
 variable substitution
 """""""""""""""""""""
@@ -141,16 +139,21 @@ variable substitution
 This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied ``composite``, for example.
 
+.. image:: samples/4-variables/pytoon_graphic.svg
+    :width: 600
+    :align: center
+    :alt: repetition of two circles over a line, with different transparencies of green
+
 .. code-block:: python
 
     from pytoon import composite, line, circle
-
+    
     sub_image = composite([
         line(begin=(-150,0), end=(+150,0), lstyle=("WEIGHT","#A0522D")),
         circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
         circle(center=(+30,0), radius=100, lstyle=False, fstyle="GREEN")
     ])
-
+    
     image = composite([
         sub_image(GREEN="0.1*green"),
         sub_image(GREEN="0.2*green").T(  0, 110),
@@ -162,26 +165,21 @@ one aspect of a copied ``composite``, for example.
         sub_image(GREEN="0.8*green").T(600, 110),
         sub_image(GREEN="0.9*green").T(600, "Two20")
     ], WEIGHT=30, Two20=220).R(20)
-
+    
     image.svg()
-
-.. image:: ./docs/samples/3-variables/pytoon_graphic.svg
-  :width: 600
-  :align: center
-  :alt: repetition of two circles over a line, with different transparencies of green
 
 To delay the specification of a property, simply set it equal to a string
 that obeys the rules for a `valid identifier in python
 <https://www.programiz.com/python-programming/keywords-identifier>`_,
-such as ``WEIGHT``, ``GREEN``, or ``Two20`` in the forgoing.
+such as ``WEIGHT``, ``GREEN``, or ``Two20`` in the forgoing
+(capitalization is just one way to eliminate name clashes).
 When a keyword argument with that identifier is later passed to a
 copy-generator call, or to a ``composite`` that contains that object, the
 value of that argument is substituted.
 The seemingly pointless use of ``Two20`` is just to demonstrate that this
 works pretty much everywhere, all the time.
-Capitalizing at least the
-first letter is one way to eliminate name clashes with standard properties of
-entity classes.
+There are even more advanced uses of lazy evaluation involving functions
+of variables that are covered in the full documentation.
 
 simple transformations
 """"""""""""""""""""""
@@ -198,35 +196,34 @@ One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.
 
+.. image:: samples/5-animation/pytoon_graphic.svg
+    :width: 600
+    :align: center
+    :alt: black circle going back and forth on a tan background
+
 .. code-block:: python
 
     import math
     from pytoon import composite, circle, polygon, animated
-
+    
     def c(_t_):
         x = 50 * math.cos(2*math.pi * _t_)
         return (x,0)
-
+    
     image = composite([
         polygon(points=[(-200,-110), (-200,110), (200,110), (200,-110)], lstyle=False, fstyle="tan"),
         circle(center=animated(c,Dt=0.05))
         ])
-
+    
     image.svg(time=(0,1), duration=2)
 
-.. image:: ./docs/samples/4-animation/pytoon_graphic.svg
-  :width: 600
-  :align: center
-  :alt: black circle going back and forth on a tan background
-
-*(As embedded, this animation plays with no user interaction.  Click the image
-to open it by itself, and use the space bar to start/stop.  More is said
-about control later.)*
+*(As embedded, this animation plays with no user interaction.  More is said
+about control in the full documentation.)*
 
 The user-defined function ``c`` in the code above defines an oscillatory
 trajectory.
-The time argument for such a function must be named ``_t_`` (to stay out of the
-way of any variables a user might want to define).
+The time argument for such a function must be named ``_t_`` (chosen to stay out
+of the way of any variables a user might want to define).
 The snippet ``center=animated(c,Dt=0.05)`` is where the function ``c`` is
 applied specifically to the center of the circle.
 The user, generally aware of the contents of ``c`` decides on the time step
@@ -234,7 +231,7 @@ The user, generally aware of the contents of ``c`` decides on the time step
 All the rest is figured out by *PyToon*.
 
 The time interval to be rendered 
-(``_t_`` |rarr| ``0`` through ``_t_`` |rarr| ``1``)
+(``_t_`` :raw-html:`&rarr;` ``0`` through ``_t_`` :raw-html:`&rarr;` ``1``)
 is specified by the ``time=(0,1)`` argument to the ``.svg`` call.  This
 "internal" time is in arbitrary units of the user's choice, but the rendered 
 interval will play out over 2 seconds of real time, as specified by 
@@ -243,18 +240,19 @@ interval will play out over 2 seconds of real time, as specified by
 grand finale
 """"""""""""
 
-.. image:: ./docs/samples/5-water-wave/water-wave.svg
-  :width: 600
-  :align: center
-  :alt: waves on water showing elliptical particle trajectories and seaweed
+.. image:: samples/6-water-wave/pytoon_graphic.svg
+    :width: 600
+    :align: center
+    :alt: waves on water showing elliptical particle trajectories and seaweed
 
 So much for the simple.  How about the complex?
 The above image (about 2 MB, rendered) was generated by about 50 lines of 
 python code, about half
 of which were needed to compute the dynamic, area-conserving transformation
-that physically defines the wave.  Except for importing ``pytoon`` and things
+that physically defines the wave.
+Except for importing ``pytoon`` and things
 from the standard library, it is completely free-standing
-(the code appears in the dicussion of tranformations).
+(the code appears in the dicussion of tranformations in the full documentation).
 Notice how the centers of the circles move with the distortion field that 
 makes the background wave, but they are not themselves distorted (unlike the
 seaweed).  You have that much control!
@@ -324,7 +322,7 @@ Copyright and License
 :raw-html:`&copy;` Copyright 2012, 2013, 2015, 2016, 2018, 2020 Anthony D. Dutoi (tonydutoi@gmail.com)
 
 | Library source code:  `GPLv3 <http://www.gnu.org/licenses/>`_
-| Documentation (including this file): `CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>`_
+| Documentation (including this file): `CC-BY-SA 4.0 <http://creativecommons.org/licenses/by-sa/4.0/>`_
 | See the `LICENSE` file in this same directory for further information.
 
 

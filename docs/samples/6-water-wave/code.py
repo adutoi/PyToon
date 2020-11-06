@@ -77,4 +77,4 @@ image = composite([
 
 T = 3
 
-image(T=T).svg("water-wave", title="Wave on the Surface of Water", time=(0,T), duration=T, background="#202020", controls=False)
+image(T=T).svg(title="Wave on the Surface of Water", time=(0,T), duration=T, background="#202020", controls=False)

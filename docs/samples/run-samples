@@ -2,18 +2,13 @@
 
 # This script is a utility for building the documentation, not intended for end users.
 
-shopt -s nullglob
-
 for d in *
 do
     if test -d "$d" 
     then
+        echo running "$d"
         cd "$d"
-        for py in *.py
-        do
-            echo running "$d/$py"
-            python "$py"
-        done
+        python "code.py"
         cd -   > /dev/null
     fi
 done

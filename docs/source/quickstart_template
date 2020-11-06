@@ -1,30 +1,3 @@
-..
-    (C) Copyright 2020 Anthony D. Dutoi
-    This file is licensed under a Creative Commons Attribution-ShareAlike 4.0
-    International License (see http://creativecommons.org/licenses/by-sa/4.0/)
-
-
-
-.. role::  raw-html(raw)
-    :format: html
-
-PyToon Documentation
-================================================================================
-
-.. image:: samples/1-circle/pytoon_graphic.svg
-    :width: 400
-    :align: left
-    :alt: one circle, no fill
-
-.. code-block:: python
-
-    from pytoon import circle
-    
-    circle().svg()
-
-Quickstart
-----------
-
 The code and resulting image above show the simplest possible use case of
 *PyToon*.
 The ``.svg`` method renders the image represented by an object of ``circle`` 
@@ -36,28 +9,14 @@ Failing any supplied arguments, you get a "default circle"
 An object of ``circle`` class is an example of an *entity*.
 An *entity* is any "drawable" object.
 
-composite images
-^^^^^^^^^^^^^^^^
+### composite images
 
 The example above is inherently boring, since there is only one entity in the
 image.
 A ``composite`` entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:
 
-.. image:: samples/2-composite/pytoon_graphic.svg
-    :width: 600
-    :align: center
-    :alt: two filled circles over a line, one semi-transparent
-
-.. code-block:: python
-
-    from pytoon import composite, line, circle
-    
-    composite([
-        line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
-        circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
-        circle(center=(+30,0), radius=100, lstyle=False, fstyle="0.8 * green")
-    ]).svg("two-circles")
+[[2-composite]]
 
 Though the syntax for the above is largely self-evident, given that the output
 is graphical, a couple of points deserve mention:
@@ -75,8 +34,7 @@ is graphical, a couple of points deserve mention:
 * this time, a file name (\ :raw-html:`&rarr;` ``two-circles.svg``) is specified for the 
   output.
 
-copy-generated entities
-^^^^^^^^^^^^^^^^^^^^^^^
+### copy-generated entities
 
 So far, this is just a declarative graphics language mapped to python, so
 let's have some fun using its python-ness.
@@ -86,52 +44,14 @@ The call signature is the same as for instantiation, where any supplied
 arguments override the "defaults" set by the called object.
 So we could have written the above as:
 
-.. code-block:: python
+[[3-copygen -code-only]]
 
-    from pytoon import composite, line, circle
-    
-    my_circle = circle(radius=100, lstyle=False, fstyle="salmon")
-    
-    composite([
-        line(begin=(-150,0), end=(+150,0), lstyle=(3,"#A0522D")),
-        my_circle(center=(-30,0)),
-        my_circle(center=(+30,0), fstyle="0.8 * green")
-    ]).svg("two-circles")
-
-variable substitution
-^^^^^^^^^^^^^^^^^^^^^
+### variable substitution
 
 This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied ``composite``, for example.
 
-.. image:: samples/4-variables/pytoon_graphic.svg
-    :width: 600
-    :align: center
-    :alt: repetition of two circles over a line, with different transparencies of green
-
-.. code-block:: python
-
-    from pytoon import composite, line, circle
-    
-    sub_image = composite([
-        line(begin=(-150,0), end=(+150,0), lstyle=("WEIGHT","#A0522D")),
-        circle(center=(-30,0), radius=100, lstyle=False, fstyle="salmon"),
-        circle(center=(+30,0), radius=100, lstyle=False, fstyle="GREEN")
-    ])
-    
-    image = composite([
-        sub_image(GREEN="0.1*green"),
-        sub_image(GREEN="0.2*green").T(  0, 110),
-        sub_image(GREEN="0.3*green").T(  0, 220),
-        sub_image(GREEN="0.4*green").T(300,   0),
-        sub_image(GREEN="0.5*green").T(300, 110),
-        sub_image(GREEN="0.6*green").T(300, 220),
-        sub_image(GREEN="0.7*green").T(600,   0),
-        sub_image(GREEN="0.8*green").T(600, 110),
-        sub_image(GREEN="0.9*green").T(600, "Two20")
-    ], WEIGHT=30, Two20=220).R(20)
-    
-    image.svg()
+[[4-variables]]
 
 To delay the specification of a property, simply set it equal to a string
 that obeys the rules for a `valid identifier in python
@@ -146,41 +66,20 @@ works pretty much everywhere, all the time.
 There are even more advanced uses of lazy evaluation involving functions
 of variables that are covered in the full documentation.
 
-simple transformations
-^^^^^^^^^^^^^^^^^^^^^^
+### simple transformations
 
 In the above example, we also see the ``.T`` and ``.R`` methods of entities
 being called.  These are shorthand for "translate" and "rotate," respectively,
 and their effect is to return a copy of the entity, transformed as specified.
 There is also a ``.S`` method that scales the image.
 
-animation
-^^^^^^^^^
+### animation
 
 One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.
 
-.. image:: samples/5-animation/pytoon_graphic.svg
-    :width: 600
-    :align: center
-    :alt: black circle going back and forth on a tan background
-
-.. code-block:: python
-
-    import math
-    from pytoon import composite, circle, polygon, animated
-    
-    def c(_t_):
-        x = 50 * math.cos(2*math.pi * _t_)
-        return (x,0)
-    
-    image = composite([
-        polygon(points=[(-200,-110), (-200,110), (200,110), (200,-110)], lstyle=False, fstyle="tan"),
-        circle(center=animated(c,Dt=0.05))
-        ])
-    
-    image.svg(time=(0,1), duration=2)
+[[5-animation]]
 
 *(As embedded, this animation plays with no user interaction.  More is said
 about control in the full documentation.)*
@@ -202,13 +101,9 @@ is specified by the ``time=(0,1)`` argument to the ``.svg`` call.  This
 interval will play out over 2 seconds of real time, as specified by 
 ``duration=2``.
 
-grand finale
-^^^^^^^^^^^^
+### grand finale
 
-.. image:: samples/6-water-wave/pytoon_graphic.svg
-    :width: 600
-    :align: center
-    :alt: waves on water showing elliptical particle trajectories and seaweed
+[[6-water-wave -img-only]]
 
 So much for the simple.  How about the complex?
 The above image (about 2 MB, rendered) was generated by about 50 lines of 
@@ -221,34 +116,3 @@ from the standard library, it is completely free-standing
 Notice how the centers of the circles move with the distortion field that 
 makes the background wave, but they are not themselves distorted (unlike the
 seaweed).  You have that much control!
-
-
-
-Complete Guide
---------------
-
-.. toctree::
-   :maxdepth: 3
-
-   lineart
-   linesfills
-   composites
-   transformations
-   animation
-   variables
-
-
-
-
-.. raw:: html
-
-    <p>
-    <br />
-    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
-    <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" />
-    </a>
-    &nbsp; This documentation and its components (text, images, and code) are licensed under a
-    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
-    Creative Commons Attribution-ShareAlike 4.0 International License
-    </a>.
-    </p>

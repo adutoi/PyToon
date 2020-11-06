@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+
+def render_sample(string, *, prefix, width=600, align="center"):
+    fields = string.split()
+    image  = ".. image:: samples/{}/pytoon_graphic.svg\n".format(fields[0])
+    image += "    :width: {}\n".format(width)
+    image += "    :align: {}\n".format(align)
+    image += "    :alt: " + open("samples/{}/alt.txt".format(fields[0]), "r").read()
+    code = open("samples/{}/code.py".format(fields[0]), "r").readlines()
+    for i in range(len(code)):
+        code[i] = "    " + code[i]
+    code = [".. code-block:: python\n", "\n"] + code
+    code = "".join(code)
+    value = ""
+    sep = ""
+    if len(fields)==1 or fields[1]!="-code-only":
+        value += image
+        sep = "\n"
+    if len(fields)==1 or fields[1]!="-img-only":
+        value += sep + code
+    return value
+
+def underline(string, char):
+    uline = char * (len(string)-1) + "\n"
+    return string + uline
+
+
+
+template = open("quickstart_template").readlines()
+
+
+
+index  = [render_sample("1-circle", prefix="", width=400, align="left")]
+index += ["\n"]
+index += [underline("Quickstart\n", '-')]
+index += ["\n"]
+for line in template:
+    if line[:3] == "###":
+        index += [underline(line[4:], '^')]
+    elif line[:2]=="[[":
+        index += [render_sample(line[2:-3], prefix="")]
+    else:
+        index += [line]
+index = "".join(index)
+
+open("index.rst", "w").write(
+    open("index_template", "r").read().format(quickstart=index)
+)
+
+
+
+readme  = [underline("quickstart\n", '^')]
+readme += ["\n"]
+readme += [render_sample("1-circle", prefix="./docs/", width=400, align="left")]
+readme += ["\n"]
+for line in template:
+    if line[:3] == "###":
+        readme += [underline(line[4:], '"')]
+    elif line[:2]=="[[":
+        readme += [render_sample(line[2:-3], prefix="./docs/")]
+    else:
+        readme += [line]
+readme = "".join(readme)
+
+open("../../README.rst", "w").write(
+    open("README_template", "r").read().format(quickstart=readme)
+)

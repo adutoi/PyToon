@@ -34,7 +34,7 @@
             
   <div class="section" id="pytoon-documentation">
 <h1>PyToon Documentation<a class="headerlink" href="#pytoon-documentation" title="Permalink to this headline">¶</a></h1>
-<a class="reference internal image-reference" href="_images/pytoon_graphic.svg"><img alt="one circle, no fill" src="_images/pytoon_graphic.svg" width="400" /></a>
+<a class="reference internal image-reference" href="_images/pytoon_graphic.svg"><img alt="one circle, no fill" class="align-left" src="_images/pytoon_graphic.svg" width="400" /></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytoon</span> <span class="kn">import</span> <span class="n">circle</span>
 
 <span class="n">circle</span><span class="p">()</span><span class="o">.</span><span class="n">svg</span><span class="p">()</span>
@@ -47,9 +47,9 @@
 The <code class="docutils literal notranslate"><span class="pre">.svg</span></code> method renders the image represented by an object of <code class="docutils literal notranslate"><span class="pre">circle</span></code>
 class in the <a class="reference external" href="https://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a>
 graphics language, with the default local file name <code class="docutils literal notranslate"><span class="pre">pytoon_graphic.svg</span></code>.
-Failing any supplied arguments, you get a “default circle” (radius of 100
-points, black 1-point outline, with no fill).</p>
-<p>The object of <code class="docutils literal notranslate"><span class="pre">circle</span></code> class is an example of an <em>entity</em>.
+Failing any supplied arguments, you get a “default circle”
+(black, 1-point outline, with no fill, and a radius of 100 points).</p>
+<p>An object of <code class="docutils literal notranslate"><span class="pre">circle</span></code> class is an example of an <em>entity</em>.
 An <em>entity</em> is any “drawable” object.</p>
 <div class="section" id="composite-images">
 <h3>composite images<a class="headerlink" href="#composite-images" title="Permalink to this headline">¶</a></h3>
@@ -57,6 +57,7 @@ An <em>entity</em> is any “drawable” object.</p>
 image.
 A <code class="docutils literal notranslate"><span class="pre">composite</span></code> entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:</p>
+<a class="reference internal image-reference" href="_images/pytoon_graphic1.svg"><img alt="two filled circles over a line, one semi-transparent" class="align-center" src="_images/pytoon_graphic1.svg" width="600" /></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytoon</span> <span class="kn">import</span> <span class="n">composite</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">circle</span>
 
 <span class="n">composite</span><span class="p">([</span>
@@ -66,31 +67,27 @@ are given in a list (or any other iterable), as so:</p>
 <span class="p">])</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="s2">&quot;two-circles&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/two-circles.svg"><img alt="two filled circles over a line, one semi-transparent" class="align-center" src="_images/two-circles.svg" width="600" /></a>
 <p>Though the syntax for the above is largely self-evident, given that the output
 is graphical, a couple of points deserve mention:</p>
 <ul class="simple">
 <li><p>values for the <code class="docutils literal notranslate"><span class="pre">lstyle</span></code> and <code class="docutils literal notranslate"><span class="pre">fstyle</span></code> arguments, which style lines and
-fills, respectively,
-have a liberal interpretation
-(covered more later);
-<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> and
-<code class="docutils literal notranslate"><span class="pre">False</span></code> would all work to turn off the outlines of the circles, and the
-order inside the tuple defining the brown line (weight and color,
-respectively) could be swapped.</p></li>
+fills, respectively, have a liberal interpretation
+(covered in the full documentation);
+<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">False</span></code> would all work to turn off the outlines of
+the circles, and the order inside the tuple defining the brown line (weight
+and color, respectively) could be swapped.</p></li>
 <li><p>color syntax is also flexible; RGB codes or named colors can be used, and the
 <code class="docutils literal notranslate"><span class="pre">0.8</span></code> multiplier for the green color causes it to be semi-transparent.</p></li>
 <li><p>entities are layered in the order they are defined (last given is on top of
 all others).</p></li>
-<li><p>this time, a file name (→ <code class="docutils literal notranslate"><span class="pre">two-circles.svg</span></code>) is specified for the
+<li><p>this time, a file name (<span class="raw-html">&rarr;</span> <code class="docutils literal notranslate"><span class="pre">two-circles.svg</span></code>) is specified for the
 output.</p></li>
 </ul>
 </div>
 <div class="section" id="copy-generated-entities">
 <h3>copy-generated entities<a class="headerlink" href="#copy-generated-entities" title="Permalink to this headline">¶</a></h3>
 <p>So far, this is just a declarative graphics language mapped to python, so
-let’s have
-some fun using its python-ness.
+let’s have some fun using its python-ness.
 To start with, every entity is callable, acting as a generator for copies of
 itself.
 The call signature is the same as for instantiation, where any supplied
@@ -104,7 +101,7 @@ So we could have written the above as:</p>
     <span class="n">line</span><span class="p">(</span><span class="n">begin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">150</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="p">(</span><span class="o">+</span><span class="mi">150</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">lstyle</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="s2">&quot;#A0522D&quot;</span><span class="p">)),</span>
     <span class="n">my_circle</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span>
     <span class="n">my_circle</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">+</span><span class="mi">30</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">fstyle</span><span class="o">=</span><span class="s2">&quot;0.8 * green&quot;</span><span class="p">)</span>
-<span class="p">])</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="s2">&quot;two-circles-alt&quot;</span><span class="p">)</span>
+<span class="p">])</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="s2">&quot;two-circles&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -112,6 +109,7 @@ So we could have written the above as:</p>
 <h3>variable substitution<a class="headerlink" href="#variable-substitution" title="Permalink to this headline">¶</a></h3>
 <p>This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied <code class="docutils literal notranslate"><span class="pre">composite</span></code>, for example.</p>
+<a class="reference internal image-reference" href="_images/pytoon_graphic2.svg"><img alt="repetition of two circles over a line, with different transparencies of green" class="align-center" src="_images/pytoon_graphic2.svg" width="600" /></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytoon</span> <span class="kn">import</span> <span class="n">composite</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">circle</span>
 
 <span class="n">sub_image</span> <span class="o">=</span> <span class="n">composite</span><span class="p">([</span>
@@ -135,18 +133,17 @@ one aspect of a copied <code class="docutils literal notranslate"><span class="p
 <span class="n">image</span><span class="o">.</span><span class="n">svg</span><span class="p">()</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/pytoon_graphic1.svg"><img alt="repetition of two circles over a line, with different transparencies of green" class="align-center" src="_images/pytoon_graphic1.svg" width="600" /></a>
 <p>To delay the specification of a property, simply set it equal to a string
 that obeys the rules for a <a class="reference external" href="https://www.programiz.com/python-programming/keywords-identifier">valid identifier in python</a>,
-such as <code class="docutils literal notranslate"><span class="pre">WEIGHT</span></code>, <code class="docutils literal notranslate"><span class="pre">GREEN</span></code>, or <code class="docutils literal notranslate"><span class="pre">Two20</span></code> in the forgoing.
+such as <code class="docutils literal notranslate"><span class="pre">WEIGHT</span></code>, <code class="docutils literal notranslate"><span class="pre">GREEN</span></code>, or <code class="docutils literal notranslate"><span class="pre">Two20</span></code> in the forgoing
+(capitalization is just one way to eliminate name clashes).
 When a keyword argument with that identifier is later passed to a
 copy-generator call, or to a <code class="docutils literal notranslate"><span class="pre">composite</span></code> that contains that object, the
 value of that argument is substituted.
 The seemingly pointless use of <code class="docutils literal notranslate"><span class="pre">Two20</span></code> is just to demonstrate that this
 works pretty much everywhere, all the time.
-Capitalizing at least the
-first letter is one way to eliminate name clashes with standard properties of
-entity classes.</p>
+There are even more advanced uses of lazy evaluation involving functions
+of variables that are covered in the full documentation.</p>
 </div>
 <div class="section" id="simple-transformations">
 <h3>simple transformations<a class="headerlink" href="#simple-transformations" title="Permalink to this headline">¶</a></h3>
@@ -160,6 +157,7 @@ There is also a <code class="docutils literal notranslate"><span class="pre">.S<
 <p>One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.</p>
+<a class="reference internal image-reference" href="_images/pytoon_graphic3.svg"><img alt="black circle going back and forth on a tan background" class="align-center" src="_images/pytoon_graphic3.svg" width="600" /></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">pytoon</span> <span class="kn">import</span> <span class="n">composite</span><span class="p">,</span> <span class="n">circle</span><span class="p">,</span> <span class="n">polygon</span><span class="p">,</span> <span class="n">animated</span>
 
@@ -175,21 +173,19 @@ attributes.</p>
 <span class="n">image</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">duration</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/pytoon_graphic2.svg"><img alt="black circle going back and forth on a tan background" class="align-center" src="_images/pytoon_graphic2.svg" width="600" /></a>
-<p><em>(As embedded, this animation plays with no user interaction.  Click the image
-to open it by itself, and use the space bar to start/stop.  More is said
-about control later.)</em></p>
+<p><em>(As embedded, this animation plays with no user interaction.  More is said
+about control in the full documentation.)</em></p>
 <p>The user-defined function <code class="docutils literal notranslate"><span class="pre">c</span></code> in the code above defines an oscillatory
 trajectory.
-The time argument for such a function must be named <code class="docutils literal notranslate"><span class="pre">_t_</span></code> (to stay out of the
-way of any variables a user might want to define).
+The time argument for such a function must be named <code class="docutils literal notranslate"><span class="pre">_t_</span></code> (chosen to stay out
+of the way of any variables a user might want to define).
 The snippet <code class="docutils literal notranslate"><span class="pre">center=animated(c,Dt=0.05)</span></code> is where the function <code class="docutils literal notranslate"><span class="pre">c</span></code> is
 applied specifically to the center of the circle.
 The user, generally aware of the contents of <code class="docutils literal notranslate"><span class="pre">c</span></code> decides on the time step
 (<code class="docutils literal notranslate"><span class="pre">Dt=0.05</span></code>) necessary for a good rendering of this trajectory.
 All the rest is figured out by <em>PyToon</em>.</p>
 <p>The time interval to be rendered
-(<code class="docutils literal notranslate"><span class="pre">_t_</span></code> → <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">_t_</span></code> → <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+(<code class="docutils literal notranslate"><span class="pre">_t_</span></code> <span class="raw-html">&rarr;</span> <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">_t_</span></code> <span class="raw-html">&rarr;</span> <code class="docutils literal notranslate"><span class="pre">1</span></code>)
 is specified by the <code class="docutils literal notranslate"><span class="pre">time=(0,1)</span></code> argument to the <code class="docutils literal notranslate"><span class="pre">.svg</span></code> call.  This
 “internal” time is in arbitrary units of the user’s choice, but the rendered
 interval will play out over 2 seconds of real time, as specified by
@@ -197,14 +193,15 @@ interval will play out over 2 seconds of real time, as specified by
 </div>
 <div class="section" id="grand-finale">
 <h3>grand finale<a class="headerlink" href="#grand-finale" title="Permalink to this headline">¶</a></h3>
-<a class="reference internal image-reference" href="_images/water-wave.svg"><img alt="waves on water showing elliptical particle trajectories and seaweed" class="align-center" src="_images/water-wave.svg" width="600" /></a>
+<a class="reference internal image-reference" href="_images/pytoon_graphic4.svg"><img alt="waves on water showing elliptical particle trajectories and seaweed" class="align-center" src="_images/pytoon_graphic4.svg" width="600" /></a>
 <p>So much for the simple.  How about the complex?
 The above image (about 2 MB, rendered) was generated by about 50 lines of
 python code, about half
 of which were needed to compute the dynamic, area-conserving transformation
-that physically defines the wave.  Except for importing <code class="docutils literal notranslate"><span class="pre">pytoon</span></code> and things
+that physically defines the wave.
+Except for importing <code class="docutils literal notranslate"><span class="pre">pytoon</span></code> and things
 from the standard library, it is completely free-standing
-(the code appears in the dicussion of tranformations).
+(the code appears in the dicussion of tranformations in the full documentation).
 Notice how the centers of the circles move with the distortion field that
 makes the background wave, but they are not themselves distorted (unlike the
 seaweed).  You have that much control!</p>

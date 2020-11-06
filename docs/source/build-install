@@ -1,18 +1,16 @@
 #!/bin/bash
 
 # This will run the samples, build some source files, and then compile and install the html documentation.
-# Supplying any argument at all to the script will suppress running the samples (which takes a few seconds).
+# To run the samples the option -run-samples must be given
 
-
-if [ -z "$1" ]
+if [ "$1" == "-run-samples" ]
 then
     cd samples
     ./run-samples
     cd -   > /dev/null
 fi
 
-# assemble index.rst and README.rst from common source  <- not yet done
+./install-quickstart
 
 make html
 cp -rf _build/html/* ../html
-
