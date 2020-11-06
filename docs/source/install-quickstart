@@ -2,7 +2,7 @@
 
 def render_sample(string, *, prefix, width=600, align="center"):
     fields = string.split()
-    image  = ".. image:: samples/{}/pytoon_graphic.svg\n".format(fields[0])
+    image  = ".. image:: {}samples/{}/pytoon_graphic.svg\n".format(prefix, fields[0])
     image += "    :width: {}\n".format(width)
     image += "    :align: {}\n".format(align)
     image += "    :alt: " + open("samples/{}/alt.txt".format(fields[0]), "r").read()

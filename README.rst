@@ -49,7 +49,7 @@ Usage
 quickstart
 ^^^^^^^^^^
 
-.. image:: samples/1-circle/pytoon_graphic.svg
+.. image:: ./docs/samples/1-circle/pytoon_graphic.svg
     :width: 400
     :align: left
     :alt: one circle, no fill
@@ -79,7 +79,7 @@ image.
 A ``composite`` entity is drawable too, and simply draws its components, which
 are given in a list (or any other iterable), as so:
 
-.. image:: samples/2-composite/pytoon_graphic.svg
+.. image:: ./docs/samples/2-composite/pytoon_graphic.svg
     :width: 600
     :align: center
     :alt: two filled circles over a line, one semi-transparent
@@ -139,7 +139,7 @@ variable substitution
 This is even more powerful when combined with variable substitution, to adjust
 one aspect of a copied ``composite``, for example.
 
-.. image:: samples/4-variables/pytoon_graphic.svg
+.. image:: ./docs/samples/4-variables/pytoon_graphic.svg
     :width: 600
     :align: center
     :alt: repetition of two circles over a line, with different transparencies of green
@@ -196,7 +196,7 @@ One of the most powerful features is the way that the heavy lifting is done by
 python to translate arbitrary user-defined functions into animation paths and
 attributes.
 
-.. image:: samples/5-animation/pytoon_graphic.svg
+.. image:: ./docs/samples/5-animation/pytoon_graphic.svg
     :width: 600
     :align: center
     :alt: black circle going back and forth on a tan background
@@ -240,7 +240,7 @@ interval will play out over 2 seconds of real time, as specified by
 grand finale
 """"""""""""
 
-.. image:: samples/6-water-wave/pytoon_graphic.svg
+.. image:: ./docs/samples/6-water-wave/pytoon_graphic.svg
     :width: 600
     :align: center
     :alt: waves on water showing elliptical particle trajectories and seaweed
