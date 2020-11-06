@@ -3,6 +3,9 @@
     This file is licensed under a Creative Commons Attribution-ShareAlike 4.0
     International License (see http://creativecommons.org/licenses/by-sa/4.0/)
 
+..
+    DO NOT DIRECTLY EDIT THIS FILE.  EDIT THE TEMPLATE.
+
 
 
 .. role::  raw-html(raw)

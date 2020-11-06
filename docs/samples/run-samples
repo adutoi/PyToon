@@ -8,7 +8,7 @@ do
     then
         echo running "$d"
         cd "$d"
-        python "code.py"
+        ./run
         cd -   > /dev/null
     fi
 done

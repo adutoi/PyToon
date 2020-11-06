@@ -3,6 +3,9 @@
     This file is licensed under a Creative Commons Attribution-ShareAlike 4.0
     International License (see http://creativecommons.org/licenses/by-sa/4.0/)
 
+..
+    DO NOT DIRECTLY EDIT THIS FILE.  EDIT THE TEMPLATE IN docs/source/
+
 
 
 .. role::  raw-html(raw)
@@ -11,7 +14,7 @@
 PyToon
 ================================================================================
 
-.. image:: ./docs/samples/5-water-wave/water-wave.svg
+.. image:: ./docs/samples/6-water-wave/pytoon_graphic.svg
   :width: 600
   :align: center
   :alt: waves on water showing elliptical particle trajectories and seaweed
@@ -50,8 +53,8 @@ quickstart
 ^^^^^^^^^^
 
 .. image:: ./docs/samples/1-circle/pytoon_graphic.svg
-    :width: 400
-    :align: left
+    :width: 600
+    :align: center
     :alt: one circle, no fill
 
 .. code-block:: python

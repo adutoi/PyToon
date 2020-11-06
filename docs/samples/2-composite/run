@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python code.py
+cp two-circles.svg pytoon_graphic.svg   # README.rst confused by soft links

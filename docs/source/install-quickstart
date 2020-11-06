@@ -51,7 +51,7 @@ open("index.rst", "w").write(
 
 readme  = [underline("quickstart\n", '^')]
 readme += ["\n"]
-readme += [render_sample("1-circle", prefix="./docs/", width=400, align="left")]
+readme += [render_sample("1-circle", prefix="./docs/")]
 readme += ["\n"]
 for line in template:
     if line[:3] == "###":
