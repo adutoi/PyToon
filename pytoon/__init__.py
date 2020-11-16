@@ -20,5 +20,5 @@ from .           import draw    # so that draw can be made accessible as 'from p
 from .util       import struct
 from .transforms import uniform_transform, positional_transform, translate, rotate, scale, zoom, stretch, parametric
 from .composite  import composite
-from .line_art   import line, circle, polygon
+from .line_art   import line, path, polygon, circle
 from .animation  import animated

@@ -276,6 +276,20 @@ class polygon(base.entity):
         points = _render_points(points, transform, time)
         canvas.polygon(points=points, lstyle=lstyle, fstyle=fstyle)
 
+class path(base.entity):
+    """ describes a pytoon path entity """
+    def __init__(self, *, points=None, lstyle=None, fstyle=None, varval=None, transform=None, clock=None, **kwargs):
+        base.entity.__init__(self, kwargs, varval, transform, clock, points=points, lstyle=lstyle, fstyle=fstyle)
+    def _draw(self, time, canvas, aux_dir):
+        parameters, transform, clock, anim_wrap = self._resolve_parameters()
+        lstyle = _linestyle(parameters.lstyle, anim_wrap)
+        fstyle = _fillstyle(parameters.fstyle, anim_wrap)
+        points = anim_wrap([(0,0),(50,100),(100,0)] if (parameters.points is None) else parameters.points)
+        lstyle = _render_lstyle(lstyle, transform, animation.wrapper(points, postprocess=lambda pts: pts[0]), time)
+        fstyle = _render_fstyle(fstyle, time)
+        points = _render_points(points, transform, time)
+        canvas.path(points=points, lstyle=lstyle, fstyle=fstyle)
+
 
 #
 # path, arc, arrow, star, square, rectangle
