@@ -31,7 +31,7 @@ def _linestyle(lstyle, wrap):
     try:
         value = _parsers.linestyle(lstyle)    # promotes constants (fails for linestyle instances if contains animated components)
     except:
-        value = lstyle()                      # copy for local modification (assume linestyle instance with animated components)
+        value = util.linestyle(lstyle)        # copy for local modification (assume linestyle instance with animated components)
     value.color  = wrap(value.color)
     value.weight = wrap(value.weight)
     value.dash   = wrap(value.dash)
@@ -157,10 +157,23 @@ def _static_lstyle(lstyle, transform, origin, t):
     return lstyle
 
 def _animated_lstyle(lstyle, transform, origin, ta, tz):
-    # N = ?
-    lstyle.color = lstyle.color(None)     # not yet animated
-    # N = ?
+    print("in _animated_lstyle: lstyle =", lstyle)
+    N = lstyle.color.n_intervals(ta, tz)    # no n_min because color not (yet) affected by transform
+    Dt = (tz-ta)/N if N>0 else None         # None essentially means "infinity" or "not animated"
+    homogeneous = True
+    value  = None
+    values = []
+    for i in range(N+1):
+        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
+        c = lstyle.color(t)
+        values += [( _t_frac(t,ta,tz), c )]
+        if (value is not None) and c!=value:  homogeneous = False
+        value = c
+    if homogeneous:  lstyle.color = value
+    else:            lstyle.color = values
+    #
     lstyle.dash  = lstyle.dash(None)      # not yet animated
+    #
     N = transform.n_intervals(ta, tz)
     N = origin.n_intervals(ta, tz, n_min=N)
     N = lstyle.weight.n_intervals(ta, tz, n_min=N)
@@ -196,6 +209,39 @@ def _animated_fstyle(fstyle, ta, tz):
             Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
             props[prop] = value(None)    # not yet animated
     return util.fillstyle(**props)
+
+
+
+###
+#    N = fstyle.n_intervals(ta, tz)     # no n_min because fill not (yet) affected by transforms
+#    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
+#
+#    values = []
+#    for i in range(N+1):
+#        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
+#        raw = fstyle(t)
+#        values += [( _t_frac(t,ta,tz), point(t) )]
+#    return values
+#
+#
+#
+#
+#
+#    props = {}
+#    for prop,value in util.as_dict(fstyle).items():
+#        if prop=="fill":
+#            props["_fill"] = value
+#        else:
+#            props[prop] = value(None)    # not yet animated
+#    return util.fillstyle(**props)
+###
+
+
+
+
+
+
+
 
 def _static_anim(static, anim, time, **kwargs):
         try:
@@ -270,6 +316,7 @@ class polygon(base.entity):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
         lstyle = _linestyle(parameters.lstyle, anim_wrap)
         fstyle = _fillstyle(parameters.fstyle, anim_wrap)
+        #fstyle = anim_wrap(parameters.fstyle)
         points = anim_wrap([(0,0),(50,100),(100,0)] if (parameters.points is None) else parameters.points)
         lstyle = _render_lstyle(lstyle, transform, animation.wrapper(points, postprocess=lambda pts: pts[0]), time)
         fstyle = _render_fstyle(fstyle, time)

@@ -37,15 +37,14 @@ def _render_dash(dash):
 
 class linestyle(struct):
     """ rolls a color, weight, dash descriptor into a single structure """
-    def __init__(self, *, color="black", weight=1, dash="solid"):
-        # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
-        struct.__init__(self, color=color, weight=weight, dash=dash)
-    def __call__(self, color=None, weight=None, dash=None):
-        c, w, d = as_tuple(self("color", "weight", "dash"))
+    def __init__(self, _lstyle=None, *, color=None, weight=None, dash=None):
+        c, w, d = "black", 1, "solid"
+        if _lstyle:  c, w, d = as_tuple(_lstyle("color", "weight", "dash"))
         if color  is not None:  c = color
         if weight is not None:  w = weight
         if dash   is not None:  d = dash
-        return linestyle(c, w, d)
+        # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
+        struct.__init__(self, color=c, weight=w, dash=d)
     def has_animated(self):
         """ answers whether the linestyle has any animated components """
         return (is_animated(self.color) or is_animated(self.weight) or is_animated(self.dash))
