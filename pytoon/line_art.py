@@ -26,12 +26,28 @@ from . import base
 
 _parsers = util.style_parsers(grayscale=False)    # Promotes abbreviated descriptions to structures
 
+def _const_linestyle(lstyle):
+    return _parsers.linestyle("black" if (lstyle is None) else lstyle)
+
 def _linestyle(lstyle, wrap):
-    if lstyle is None:  lstyle = "black"
     try:
-        value = _parsers.linestyle(lstyle)    # promotes constants (fails for linestyle instances if contains animated components)
+        value = _const_linestyle(lstyle)           # promotes constants: works for simple constant values
     except:
-        value = util.linestyle(lstyle)        # copy for local modification (assume linestyle instance with animated components)
+        try:
+            value = util.linestyle(lstyle)         # copy for local modification: works for linestyle struct with animated components
+        except:
+            #Dt = lstyle._Dt                       # assume that lstyle is itself an animated object (returning a type that is promotable to linestyle struct)
+            #value = util.linestyle(               # reading the parent _Dt is dirty ... think this design through better 
+            #    color  = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).color,  Dt=Dt),
+            #    weight = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).weight, Dt=Dt),
+            #    dash   = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).dash,   Dt=Dt)
+            #)
+            print("in _linestyle:", "animated whole")
+            value = util.linestyle(
+                color  = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).color),
+                weight = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).weight),
+                dash   = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).dash)
+            )
     value.color  = wrap(value.color)
     value.weight = wrap(value.weight)
     value.dash   = wrap(value.dash)
@@ -172,7 +188,19 @@ def _animated_lstyle(lstyle, transform, origin, ta, tz):
     if homogeneous:  lstyle.color = value
     else:            lstyle.color = values
     #
-    lstyle.dash  = lstyle.dash(None)      # not yet animated
+    N = lstyle.dash.n_intervals(ta, tz)     # no n_min because dash affected by transform only indirectly via line weight (handled at render level)
+    Dt = (tz-ta)/N if N>0 else None         # None essentially means "infinity" or "not animated"
+    homogeneous = True
+    value  = None
+    values = []
+    for i in range(N+1):
+        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
+        d = lstyle.dash(t)
+        values += [( _t_frac(t,ta,tz), d )]
+        if (value is not None) and d!=value:  homogeneous = False
+        value = d
+    if homogeneous:  lstyle.dash = value
+    else:            lstyle.dash = values
     #
     N = transform.n_intervals(ta, tz)
     N = origin.n_intervals(ta, tz, n_min=N)
