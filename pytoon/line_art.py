@@ -53,7 +53,7 @@ def _fillstyle(fstyle, wrap):
     try:
         value = _parsers.fillstyle(fstyle)    # promotes constants (fails for fillstyle instances if contains animated components)
     except:
-        value = fstyle()                      # copy for local modification (assume fillstyle instance with animated components)
+        value = util.fillstyle(fstyle)        # copy for local modification (assume fillstyle instance with animated components)
     props = {}
     for prop,val in util.as_dict(value).items():
         if prop=="fill":  props["_fill"] = val

@@ -138,16 +138,22 @@ def _parse_orientation(orientation):
 
 class fillstyle(struct):
     """ rolls descriptors of a fill style into a single structure """
-    def __init__(self, *, _fill, **kwargs):    # Demanding _fill by name is sign not to use directly.  Users should use static methods to instantiate wo copying.
+    def __init__(self, _fstyle=None, *, _fill=None, **kwargs):    # Demanding _fill by name is sign not to use directly.  Users should use static methods to instantiate wo copying.
+        if _fstyle and _fill:
+            raise RuntimeError("attempt to update fill type on copy is not interpretable ... use static methods instead of direct instantiation")
+        if not (_fstyle or _fill):
+            raise RuntimeError("uninterpretable use case for fillstyle.__init__ ... use static methods instead of direct instantiation")
+        if _fstyle:
+            descriptors = as_dict(_fstyle)
+            for k,v in kwargs.items():
+                if   k=="fill":         raise RuntimeError("attempt to update fill type on copy is not interpretable")
+                elif k in descriptors:  descriptors[k] = v
+                else:                   raise RuntimeError("attempt to update undefined fill descriptor upon copy")
+        else:
+            descriptors = dict(kwargs)
+            descriptors["fill"] = _fill
         # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
-        struct.__init__(self, fill=_fill, **kwargs)
-    def __call__(self, **kwargs):
-        descriptors = as_dict(self)
-        for k,v in kwargs.items():
-            if   k=="fill":         raise RuntimeError("attempt to update fill type on copy is not interpretable")
-            elif k in descriptors:  descriptors[k] = v
-            else:                   raise RuntimeError("attempt to update undefined fill descriptor upon copy")
-        return fillstyle(**descriptors)        
+        struct.__init__(self, **descriptors)
     @staticmethod
     def none():
         """ returns a structure that represents no fill """
