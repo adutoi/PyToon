@@ -27,11 +27,8 @@ class animated(object):
         self._postprocess = _postprocess
     def __call__(self, _t_):
         varval = util.variable_evaluator({"_t_": self._clock(_t_)})    # will fail if clock has not been installed (by wrapper below)
-        print("in animated: _f = ", self._f)
         value = varval(self._f)
-        print("in animated: value = ", value)
         if self._postprocess:  value = self._postprocess(value)
-        print("in animated: value again = ", value)
         return value
     def n_intervals(self, ta, tz, n_min=0):
         N = n_min

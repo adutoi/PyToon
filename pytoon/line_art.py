@@ -15,10 +15,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import operator
 import math
 from . import util
 from . import animation
 from . import base
+
+assert_different = lambda a,b:  False
 
 
 
@@ -26,27 +29,19 @@ from . import base
 
 _parsers = util.style_parsers(grayscale=False)    # Promotes abbreviated descriptions to structures
 
-def _const_linestyle(lstyle):
-    return _parsers.linestyle("black" if (lstyle is None) else lstyle)
-
 def _linestyle(lstyle, wrap):
+    def const_linestyle(lstyle):
+        return _parsers.linestyle("black" if (lstyle is None) else lstyle)
     try:
-        value = _const_linestyle(lstyle)           # promotes constants: works for simple constant values
+        value = const_linestyle(lstyle)      # promotes constants
     except:
         try:
-            value = util.linestyle(lstyle)         # copy for local modification: works for linestyle struct with animated components
+            value = util.linestyle(lstyle)    # copy for local modification: works for linestyle struct with animated components
         except:
-            #Dt = lstyle._Dt                       # assume that lstyle is itself an animated object (returning a type that is promotable to linestyle struct)
-            #value = util.linestyle(               # reading the parent _Dt is dirty ... think this design through better 
-            #    color  = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).color,  Dt=Dt),
-            #    weight = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).weight, Dt=Dt),
-            #    dash   = animation.animated(lambda _t_: _linestyle(lstyle(_t_)).dash,   Dt=Dt)
-            #)
-            print("in _linestyle:", "animated whole")
-            value = util.linestyle(
-                color  = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).color),
-                weight = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).weight),
-                dash   = animation.wrapper(lstyle, postprocess=lambda sty: _const_linestyle(sty).dash)
+            value = util.linestyle(	      # assume that lstyle is itself an animated object (returning a type that is promotable to linestyle struct)
+                color  = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).color),
+                weight = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).weight),
+                dash   = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).dash)
             )
     value.color  = wrap(value.color)
     value.weight = wrap(value.weight)
@@ -103,11 +98,24 @@ def _segment(begin, displacement, end, wrap):
 
 # simultaneously handle transformations and animation (because the transformation might be animated)
 
-def _t_frac(t,ta,tz):
-    if t is None:
-        return None
-    else:
-        return max(0, min(1, (t-ta)/(tz-ta) ))
+def _anim_loop(generate_value, same, ta, tz, N):
+    def t_frac(t,ta,tz):
+        if t is None:
+            return None
+        else:
+            return max(0, min(1, (t-ta)/(tz-ta) ))
+    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
+    homogeneous = True
+    value  = None
+    values = []
+    for i in range(N+1):
+        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
+        v = generate_value(t)
+        values += [( t_frac(t,ta,tz), v )]
+        if (value is not None) and not same(v,value):  homogeneous = False
+        value = v
+    if homogeneous:  return value
+    else:            return values
 
 def _static_point(point, transform, t):
     absolute, relative, linescale = transform.mappings(t)
@@ -120,24 +128,14 @@ def _static_points(points, transform, t):
 def _animated_point(point, transform, ta, tz):
     N = transform.n_intervals(ta, tz)
     N = point.n_intervals(ta, tz, n_min=N)
-    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        absolute, relative, linescale = transform.mappings(t)
-        values += [( _t_frac(t,ta,tz), absolute(point(t)) )]
-    return values
+    generate_value = lambda t: _static_point(point, transform, t)
+    return _anim_loop(generate_value, assert_different, ta, tz, N)
 
 def _animated_points(points, transform, ta, tz):
     N = transform.n_intervals(ta, tz)
     N = points.n_intervals(ta, tz, n_min=N)
-    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        absolute, relative, linescale = transform.mappings(t)
-        values += [( _t_frac(t,ta,tz), [absolute(point) for point in points(t)] )]
-    return values
+    generate_value = lambda t: _static_points(points, transform, t)
+    return _anim_loop(generate_value, assert_different, ta, tz, N)
 
 def _static_radius(radius, transform, origin, t):
     x0, y0 = origin(t)
@@ -149,75 +147,31 @@ def _animated_radius(radius, transform, origin, ta, tz):
     N = transform.n_intervals(ta, tz)
     N = origin.n_intervals(ta, tz, n_min=N)
     N = radius.n_intervals(ta, tz, n_min=N)
-    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-    homogeneous = True
-    value  = None
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        x0, y0 = origin(t)
-        absolute, relative, linescale = transform.mappings(t, (x0,y0))
-        (x0,y0), (x1,y1), (x2,y2) = relative((x0,y0)), relative((x0+1,y0)), relative((x0,y0+1))
-        r = radius(t) * math.sqrt( ((x1-x0)**2 + (y1-y0)**2 + (x2-x0)**2 + (y2-y0)**2) / 2 )    # always defined, =sqrt(Trace( A.T A )/2) for linear transformations
-        values += [( _t_frac(t,ta,tz), r )]
-        if (value is not None) and not util.float_eq(r,value):  homogeneous = False
-        value = r
-    if homogeneous:  return value
-    else:            return values
+    generate_value = lambda t: _static_radius(radius, transform, origin, t)
+    return _anim_loop(generate_value, util.float_eq, ta, tz, N)
+
+def _static_weight(lstyle, transform, origin, t):
+    absolute, relative, linescale = transform.mappings(t, origin(t))
+    return lstyle.weight(t) * linescale
 
 def _static_lstyle(lstyle, transform, origin, t):
-    lstyle.color = lstyle.color(t)
-    lstyle.dash  = lstyle.dash(t)
-    absolute, relative, linescale = transform.mappings(t, origin(t))
-    lstyle.weight = lstyle.weight(t) * linescale
+    lstyle.color  = lstyle.color(t)
+    lstyle.dash   = lstyle.dash(t)
+    lstyle.weight = _static_weight(lstyle, transform, origin, t)
     return lstyle
 
 def _animated_lstyle(lstyle, transform, origin, ta, tz):
-    print("in _animated_lstyle: lstyle =", lstyle)
     N = lstyle.color.n_intervals(ta, tz)    # no n_min because color not (yet) affected by transform
-    Dt = (tz-ta)/N if N>0 else None         # None essentially means "infinity" or "not animated"
-    homogeneous = True
-    value  = None
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        c = lstyle.color(t)
-        values += [( _t_frac(t,ta,tz), c )]
-        if (value is not None) and c!=value:  homogeneous = False
-        value = c
-    if homogeneous:  lstyle.color = value
-    else:            lstyle.color = values
+    lstyle.color = _anim_loop(lstyle.color, operator.eq, ta, tz, N)
     #
     N = lstyle.dash.n_intervals(ta, tz)     # no n_min because dash affected by transform only indirectly via line weight (handled at render level)
-    Dt = (tz-ta)/N if N>0 else None         # None essentially means "infinity" or "not animated"
-    homogeneous = True
-    value  = None
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        d = lstyle.dash(t)
-        values += [( _t_frac(t,ta,tz), d )]
-        if (value is not None) and d!=value:  homogeneous = False
-        value = d
-    if homogeneous:  lstyle.dash = value
-    else:            lstyle.dash = values
+    lstyle.dash = _anim_loop(lstyle.dash, operator.eq, ta, tz, N)
     #
     N = transform.n_intervals(ta, tz)
     N = origin.n_intervals(ta, tz, n_min=N)
     N = lstyle.weight.n_intervals(ta, tz, n_min=N)
-    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-    homogeneous = True
-    value  = None
-    values = []
-    for i in range(N+1):
-        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-        absolute, relative, linescale = transform.mappings(t, origin(t))
-        w = lstyle.weight(t) * linescale
-        values += [( _t_frac(t,ta,tz), w )]
-        if (value is not None) and not util.float_eq(w,value):  homogeneous = False
-        value = w
-    if homogeneous:  lstyle.weight = value
-    else:            lstyle.weight = values
+    generate_value = lambda t: _static_weight(lstyle, transform, origin, t)
+    lstyle.weight = _anim_loop(generate_value, util.float_eq, ta, tz, N)
     return lstyle
 
 def _static_fstyle(fstyle, t):
@@ -237,39 +191,6 @@ def _animated_fstyle(fstyle, ta, tz):
             Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
             props[prop] = value(None)    # not yet animated
     return util.fillstyle(**props)
-
-
-
-###
-#    N = fstyle.n_intervals(ta, tz)     # no n_min because fill not (yet) affected by transforms
-#    Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-#
-#    values = []
-#    for i in range(N+1):
-#        t = (ta + i*Dt) if (Dt is not None) else None    # if Dt is None (ie "infinity") property must be truly time independent, or will fail later
-#        raw = fstyle(t)
-#        values += [( _t_frac(t,ta,tz), point(t) )]
-#    return values
-#
-#
-#
-#
-#
-#    props = {}
-#    for prop,value in util.as_dict(fstyle).items():
-#        if prop=="fill":
-#            props["_fill"] = value
-#        else:
-#            props[prop] = value(None)    # not yet animated
-#    return util.fillstyle(**props)
-###
-
-
-
-
-
-
-
 
 def _static_anim(static, anim, time, **kwargs):
         try:
@@ -344,7 +265,6 @@ class polygon(base.entity):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
         lstyle = _linestyle(parameters.lstyle, anim_wrap)
         fstyle = _fillstyle(parameters.fstyle, anim_wrap)
-        #fstyle = anim_wrap(parameters.fstyle)
         points = anim_wrap([(0,0),(50,100),(100,0)] if (parameters.points is None) else parameters.points)
         lstyle = _render_lstyle(lstyle, transform, animation.wrapper(points, postprocess=lambda pts: pts[0]), time)
         fstyle = _render_fstyle(fstyle, time)
@@ -367,7 +287,7 @@ class path(base.entity):
 
 
 #
-# path, arc, arrow, star, square, rectangle
+# arc, arrow, star, square, rectangle
 #
 
 # A comment on arrows, polygons and paths.  An arrow is not a polygon (see Marshall Cline's a circle is not an ellipse).  Here this is because they carry
