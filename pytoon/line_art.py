@@ -25,28 +25,37 @@ assert_different = lambda a,b:  False
 
 
 
-# promote given arguments to full structures
+# deal with line and fill styles that may be constant or animated, and might, in either case, be specified in some
+# abbreviated way (and where property fields may be unknown to us here)
 
-_parsers = util.style_parsers(grayscale=False)    # Promotes abbreviated descriptions to structures
+_parsers = util.style_parsers(grayscale=False)    # Promote abbreviated description to constant style struct
 
-def _linestyle(lstyle, wrap):
-    def const_linestyle(lstyle):
-        return _parsers.linestyle("black" if (lstyle is None) else lstyle)
-    try:
-        value = const_linestyle(lstyle)      # promotes constants
-    except:
+class _static_style(object):
+    """ handles cases where style struct is static (but might contain animated properties) """
+    def __init__(self, style, parse, anim_wrap):
+        self._args = parse(style), anim_wrap     # rely on parse(style) raising an exception if style is not an appropriate struct (or promatable to one)
+    def __getattr__(self, attr):
+        style, anim_wrap = self._args
+        return anim_wrap(getattr(style,attr))    # get the appropriate property field and install clock (in case truly a function of time)
+
+class _dynamic_style(object):
+    """ handles cases where style struct is itself animated """
+    def __init__(self, style, parse, anim_wrap):
+        self._args = anim_wrap(style), parse     # install the clock at the "top" level
+    def __getattr__(self, attr):
+        style, parse = self._args
+        return animation.wrapper(style, postprocess=lambda s: getattr(parse(s),attr))    # postprocess gets appropriate property field after time evaluation
+
+def _linestyle(lstyle, anim_wrap):
+    def parse(lstyle):
         try:
-            value = util.linestyle(lstyle)    # copy for local modification: works for linestyle struct with animated components
+            return _parsers.linestyle("black" if (lstyle is None) else lstyle)    # promotes constants (raises exception if lstyle is struct with animated components)
         except:
-            value = util.linestyle(	      # assume that lstyle is itself an animated object (returning a type that is promotable to linestyle struct)
-                color  = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).color),
-                weight = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).weight),
-                dash   = animation.wrapper(lstyle, postprocess=lambda sty: const_linestyle(sty).dash)
-            )
-    value.color  = wrap(value.color)
-    value.weight = wrap(value.weight)
-    value.dash   = wrap(value.dash)
-    return value
+            return util.linestyle(lstyle)    # in case it has animated components, make sure that it is a linestyle struct at least (or will raise exception)
+    try:
+        return  _static_style(lstyle, parse, anim_wrap)    # if lstyle could be promoted to linestyle struct (with either static or animated components)
+    except:
+        return _dynamic_style(lstyle, parse, anim_wrap)    # assume it is a function that generates linestyle structs (or things that can be promoted to linestyle structs)
 
 def _fillstyle(fstyle, wrap):
     if fstyle is None:  fstyle = "none"
@@ -155,24 +164,24 @@ def _static_weight(lstyle, transform, origin, t):
     return lstyle.weight(t) * linescale
 
 def _static_lstyle(lstyle, transform, origin, t):
-    lstyle.color  = lstyle.color(t)
-    lstyle.dash   = lstyle.dash(t)
-    lstyle.weight = _static_weight(lstyle, transform, origin, t)
-    return lstyle
+    color  = lstyle.color(t)
+    dash   = lstyle.dash(t)
+    weight = _static_weight(lstyle, transform, origin, t)
+    return util.linestyle(color=color, weight=weight, dash=dash)
 
 def _animated_lstyle(lstyle, transform, origin, ta, tz):
     N = lstyle.color.n_intervals(ta, tz)    # no n_min because color not (yet) affected by transform
-    lstyle.color = _anim_loop(lstyle.color, operator.eq, ta, tz, N)
+    color = _anim_loop(lstyle.color, operator.eq, ta, tz, N)
     #
     N = lstyle.dash.n_intervals(ta, tz)     # no n_min because dash affected by transform only indirectly via line weight (handled at render level)
-    lstyle.dash = _anim_loop(lstyle.dash, operator.eq, ta, tz, N)
+    dash = _anim_loop(lstyle.dash, operator.eq, ta, tz, N)
     #
     N = transform.n_intervals(ta, tz)
     N = origin.n_intervals(ta, tz, n_min=N)
     N = lstyle.weight.n_intervals(ta, tz, n_min=N)
     generate_value = lambda t: _static_weight(lstyle, transform, origin, t)
-    lstyle.weight = _anim_loop(generate_value, util.float_eq, ta, tz, N)
-    return lstyle
+    weight = _anim_loop(generate_value, util.float_eq, ta, tz, N)
+    return util.linestyle(color=color, weight=weight, dash=dash)
 
 def _static_fstyle(fstyle, t):
     props = {}
