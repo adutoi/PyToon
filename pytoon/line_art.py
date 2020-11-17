@@ -53,21 +53,20 @@ def _linestyle(lstyle, anim_wrap):
         except:
             return util.linestyle(lstyle)    # in case it has animated components, make sure that it is a linestyle struct at least (or will raise exception)
     try:
-        return  _static_style(lstyle, parse, anim_wrap)    # if lstyle could be promoted to linestyle struct (with either static or animated components)
+        return  _static_style(lstyle, parse, anim_wrap)    # if lstyle can be promoted to linestyle struct (with either static or animated components)
     except:
         return _dynamic_style(lstyle, parse, anim_wrap)    # assume it is a function that generates linestyle structs (or things that can be promoted to linestyle structs)
 
-def _fillstyle(fstyle, wrap):
-    if fstyle is None:  fstyle = "none"
+def _fillstyle(fstyle, anim_wrap):
+    def parse(fstyle):
+        try:
+            return _parsers.fillstyle("none" if (fstyle is None) else fstyle)    # promotes constants (raises exception if fstyle is struct with animated components)
+        except:
+            return util.fillstyle(fstyle)    # in case it has animated components, make sure that it is a fillstyle struct at least (or will raise exception)
     try:
-        value = _parsers.fillstyle(fstyle)    # promotes constants (fails for fillstyle instances if contains animated components)
+        return  _static_style(fstyle, parse, anim_wrap)    # if fstyle can be promoted to fillstyle struct (with either static or animated components)
     except:
-        value = util.fillstyle(fstyle)        # copy for local modification (assume fillstyle instance with animated components)
-    props = {}
-    for prop,val in util.as_dict(value).items():
-        if prop=="fill":  props["_fill"] = val
-        else:             props[prop] = wrap(val)
-    return util.fillstyle(**props)
+        return _dynamic_style(fstyle, parse, anim_wrap)    # assume it is a function that generates fillstyle structs (or things that can be promoted to fillstyle structs)
 
 
 
@@ -184,22 +183,29 @@ def _animated_lstyle(lstyle, transform, origin, ta, tz):
     return util.linestyle(color=color, weight=weight, dash=dash)
 
 def _static_fstyle(fstyle, t):
-    props = {}
-    for prop,val in util.as_dict(fstyle).items():
-        if prop=="fill":  props["_fill"] = val
-        else:             props[prop] = val(t)
-    return util.fillstyle(**props)
+    fill = fstyle.fill(t)
+    if fill=="none":
+        return util.fillstyle.none()
+    elif fill=="solid":
+        return util.fillstyle.solid(color=fstyle.color(t))
+    else:
+        raise NotImplementedError("specified fill type is not presently implemented: {}".format(fill))
 
 def _animated_fstyle(fstyle, ta, tz):
-    props = {}
-    for prop,value in util.as_dict(fstyle).items():
-        if prop=="fill":
-            props["_fill"] = value
-        else:
-            N = value.n_intervals(ta, tz)    # no n_min because fill not affected by transform
-            Dt = (tz-ta)/N if N>0 else None    # None essentially means "infinity" or "not animated"
-            props[prop] = value(None)    # not yet animated
-    return util.fillstyle(**props)
+    N = fstyle.fill.n_intervals(ta, tz)    # no n_min because fill type not affected by transform
+    fill = _anim_loop(fstyle.fill, operator.eq, ta, tz, N)
+    if not isinstance(fill, str):
+        raise RuntimeError("fill type cannot change in time (but its parameters can) ... or you could try framewise animation (results in larger file sizes)")
+    if fill not in ("none", "solid"):
+        raise NotImplementedError("specified fill type is not presently implemented: {}".format(fill))
+    if fill=="none":
+        return util.fillstyle.none()
+    elif fill=="solid":
+        N = fstyle.color.n_intervals(ta, tz)    # no n_min because color not (yet) affected by transform
+        color = _anim_loop(fstyle.color, operator.eq, ta, tz, N)
+        return util.fillstyle.solid(color=color)
+    else:
+        raise NotImplementedError("specified fill type is not presently implemented: {}".format(fill))
 
 def _static_anim(static, anim, time, **kwargs):
         try:
