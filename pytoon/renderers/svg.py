@@ -198,12 +198,17 @@ class renderer_base(base.renderer):
                 return rgb, alpha, weight, dash
     def _parse_fill(self, fstyle):
         self._def_id += 1    # does not matter if we burn an unused number
+        static_none = svg_code.fillnone
+        animated_none = [(None,static_none)]
         if fstyle.fill=="none":
-            return svg_code.fillnone, None
+            if self._duration is None:
+                return static_none, None
+            else:
+                return animated_none, None
         elif fstyle.fill=="solid":
             if self._duration is None:
                 if (fstyle.color.rgb=="none") or (fstyle.color.a==0):
-                    return svg_code.fillnone, None
+                    return static_none, None
                 else:
                     rgb    = fstyle.color.rgb
                     alpha  = None if (fstyle.color.a is None) else _flt(fstyle.color.a)
@@ -215,7 +220,7 @@ class renderer_base(base.renderer):
                     rgb   += [(t,color.rgb)]
                     alpha += [(t,color.a)]
                 if   (len(fstyle.color)==1) and ((rgb[0][1]=="none") or (alpha[0][1]==0)):
-                    return svg_code.fillnone, None
+                    return animated_none, None
                 else:
                     rgb_values = [v for t,v in rgb]
                     if "none" in rgb_values:

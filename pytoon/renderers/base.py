@@ -43,12 +43,10 @@ from .. import util
 class renderer(object):
     """ optional base class for image-format-specific renderers, providing some entity implementations in terms others, for convenience """
     def _line_as_path(self, lstyle, begin, end, toggle):
-        nofill = util.fillstyle.none()
+        fill = util.fillstyle.none()
         if self._duration is None:
-            fill = nofill
             points = [begin,end]
         else:
-            fill = util.animated(nofill)
             try:
                 begin  = util.deanimated(begin)
                 end    = util.deanimated(end)

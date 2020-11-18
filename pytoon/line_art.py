@@ -21,7 +21,7 @@ from . import util
 from . import animation
 from . import base
 
-assert_different = lambda a,b:  False
+assert_different = lambda a,b:  False    # comparison function to use when you want to just assume two things are never equal (maybe just easier than writing a real comparison)
 
 
 
@@ -30,77 +30,41 @@ assert_different = lambda a,b:  False
 
 _parsers = util.style_parsers(grayscale=False)    # Promote abbreviated description to constant style struct
 
-class _static_style(object):
-    """ handles cases where style struct is static (but might contain animated properties) """
-    def __init__(self, style, parse, anim_wrap):
-        self._args = parse(style), anim_wrap     # rely on parse(style) raising an exception if style is not an appropriate struct (or promatable to one)
-    def __getattr__(self, attr):
-        style, anim_wrap = self._args
-        return anim_wrap(getattr(style,attr))    # get the appropriate property field and install clock (in case truly a function of time)
+def _wrap_style(style, parse, anim_wrap):
+    class static_style(object):
+        """ handles cases where style struct is static (but might contain animated properties) """
+        def __init__(self, style, parse, anim_wrap):
+            self._args = parse(style), anim_wrap     # rely on parse(style) raising an exception if style is not an appropriate struct (or promatable to one)
+        def __getattr__(self, attr):
+            style, anim_wrap = self._args
+            return anim_wrap(getattr(style,attr))    # get the appropriate property field and install clock (in case truly a function of time)
+    class dynamic_style(object):
+        """ handles cases where style struct is itself animated """
+        def __init__(self, style, parse, anim_wrap):
+            self._args = anim_wrap(style), parse     # install the clock at the "top" level
+        def __getattr__(self, attr):
+            style, parse = self._args
+            return animation.wrapper(style, postprocess=lambda s: getattr(parse(s),attr))    # postprocess gets appropriate property field after time evaluation
+    try:
+        return  static_style(style, parse, anim_wrap)    # if style can be promoted to appropriate struct (with either static or animated components)
+    except:
+        return dynamic_style(style, parse, anim_wrap)    # assume it is a function that generates style structs (or things that can be promoted to style structs)
 
-class _dynamic_style(object):
-    """ handles cases where style struct is itself animated """
-    def __init__(self, style, parse, anim_wrap):
-        self._args = anim_wrap(style), parse     # install the clock at the "top" level
-    def __getattr__(self, attr):
-        style, parse = self._args
-        return animation.wrapper(style, postprocess=lambda s: getattr(parse(s),attr))    # postprocess gets appropriate property field after time evaluation
-
-def _linestyle(lstyle, anim_wrap):
+def _wrap_linestyle(lstyle, anim_wrap):
     def parse(lstyle):
         try:
             return _parsers.linestyle("black" if (lstyle is None) else lstyle)    # promotes constants (raises exception if lstyle is struct with animated components)
         except:
             return util.linestyle(lstyle)    # in case it has animated components, make sure that it is a linestyle struct at least (or will raise exception)
-    try:
-        return  _static_style(lstyle, parse, anim_wrap)    # if lstyle can be promoted to linestyle struct (with either static or animated components)
-    except:
-        return _dynamic_style(lstyle, parse, anim_wrap)    # assume it is a function that generates linestyle structs (or things that can be promoted to linestyle structs)
+    return _wrap_style(lstyle, parse, anim_wrap)
 
-def _fillstyle(fstyle, anim_wrap):
+def _wrap_fillstyle(fstyle, anim_wrap):
     def parse(fstyle):
         try:
             return _parsers.fillstyle("none" if (fstyle is None) else fstyle)    # promotes constants (raises exception if fstyle is struct with animated components)
         except:
             return util.fillstyle(fstyle)    # in case it has animated components, make sure that it is a fillstyle struct at least (or will raise exception)
-    try:
-        return  _static_style(fstyle, parse, anim_wrap)    # if fstyle can be promoted to fillstyle struct (with either static or animated components)
-    except:
-        return _dynamic_style(fstyle, parse, anim_wrap)    # assume it is a function that generates fillstyle structs (or things that can be promoted to fillstyle structs)
-
-
-
-# make sense of a (possibly) incomplete description of endpoints by using defaults judiciously
-
-def _segment(begin, displacement, end, wrap):
-    add = lambda p,q:  (p[0]+q[0], p[1]+q[1])
-    sub = lambda p,q:  (p[0]-q[0], p[1]-q[1])
-    Default_begin        = wrap((0,0))
-    Default_displacement = wrap((100,100))
-    if begin is None:
-        begin = Default_begin
-        if displacement is None:
-            displacement = Default_displacement
-        else:
-            displacement = wrap(displacement)
-        if end is None:
-            end = animation.combine(add, begin, displacement)
-        else:
-            end = wrap(end)
-            begin = animation.combine(sub, end, displacement)
-    else:
-        begin = wrap(begin)
-        if displacement is None:
-            displacement = Default_displacement
-            if end is None:
-                end = animation.combine(add, begin, displacement)
-            else:
-                end = wrap(end)
-        elif end is None:
-            end = animation.combine(add, begin, wrap(displacement))
-        else:
-            raise ValueError("specifying begin, displacement, and end for a line is redundant/conflicting")
-    return begin, end
+    return _wrap_style(fstyle, parse, anim_wrap)
 
 
 
@@ -232,6 +196,40 @@ def _render_fstyle(fstyle, time):
 
 
 
+# make sense of a (possibly) incomplete description of endpoints by using defaults judiciously
+
+def _segment(begin, displacement, end, wrap):
+    add = lambda p,q:  (p[0]+q[0], p[1]+q[1])
+    sub = lambda p,q:  (p[0]-q[0], p[1]-q[1])
+    Default_begin        = wrap((0,0))
+    Default_displacement = wrap((100,100))
+    if begin is None:
+        begin = Default_begin
+        if displacement is None:
+            displacement = Default_displacement
+        else:
+            displacement = wrap(displacement)
+        if end is None:
+            end = animation.combine(add, begin, displacement)
+        else:
+            end = wrap(end)
+            begin = animation.combine(sub, end, displacement)
+    else:
+        begin = wrap(begin)
+        if displacement is None:
+            displacement = Default_displacement
+            if end is None:
+                end = animation.combine(add, begin, displacement)
+            else:
+                end = wrap(end)
+        elif end is None:
+            end = animation.combine(add, begin, wrap(displacement))
+        else:
+            raise ValueError("specifying begin, displacement, and end for a line is redundant/conflicting")
+    return begin, end
+
+
+
 # The classes that describe entities (or entity templates) that can be put into composite objects
 
 # An important bit of theory describes how these objects behave under transformation.  Each has a certain number
@@ -249,7 +247,7 @@ class line(base.entity):
         base.entity.__init__(self, kwargs, varval, transform, clock, begin=begin, displacement=displacement, end=end, lstyle=lstyle)
     def _draw(self, time, canvas, aux_dir):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
-        lstyle     = _linestyle(parameters.lstyle, anim_wrap)
+        lstyle     = _wrap_linestyle(parameters.lstyle, anim_wrap)
         begin, end = _segment(parameters.begin, parameters.displacement, parameters.end, anim_wrap)
         lstyle = _render_lstyle(lstyle, transform, begin, time)
         begin  = _render_point(begin, transform, time)
@@ -262,8 +260,8 @@ class circle(base.entity):
         base.entity.__init__(self, kwargs, varval, transform, clock, center=center, radius=radius, lstyle=lstyle, fstyle=fstyle)
     def _draw(self, time, canvas, aux_dir):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
-        lstyle = _linestyle(parameters.lstyle, anim_wrap)
-        fstyle = _fillstyle(parameters.fstyle, anim_wrap)
+        lstyle = _wrap_linestyle(parameters.lstyle, anim_wrap)
+        fstyle = _wrap_fillstyle(parameters.fstyle, anim_wrap)
         radius = anim_wrap( 100  if (parameters.radius is None) else parameters.radius)
         center = anim_wrap((0,0) if (parameters.center is None) else parameters.center)
         lstyle = _render_lstyle(lstyle, transform, center, time)
@@ -278,8 +276,8 @@ class polygon(base.entity):
         base.entity.__init__(self, kwargs, varval, transform, clock, points=points, lstyle=lstyle, fstyle=fstyle)
     def _draw(self, time, canvas, aux_dir):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
-        lstyle = _linestyle(parameters.lstyle, anim_wrap)
-        fstyle = _fillstyle(parameters.fstyle, anim_wrap)
+        lstyle = _wrap_linestyle(parameters.lstyle, anim_wrap)
+        fstyle = _wrap_fillstyle(parameters.fstyle, anim_wrap)
         points = anim_wrap([(0,0),(50,100),(100,0)] if (parameters.points is None) else parameters.points)
         lstyle = _render_lstyle(lstyle, transform, animation.wrapper(points, postprocess=lambda pts: pts[0]), time)
         fstyle = _render_fstyle(fstyle, time)
@@ -292,8 +290,8 @@ class path(base.entity):
         base.entity.__init__(self, kwargs, varval, transform, clock, points=points, lstyle=lstyle, fstyle=fstyle)
     def _draw(self, time, canvas, aux_dir):
         parameters, transform, clock, anim_wrap = self._resolve_parameters()
-        lstyle = _linestyle(parameters.lstyle, anim_wrap)
-        fstyle = _fillstyle(parameters.fstyle, anim_wrap)
+        lstyle = _wrap_linestyle(parameters.lstyle, anim_wrap)
+        fstyle = _wrap_fillstyle(parameters.fstyle, anim_wrap)
         points = anim_wrap([(0,0),(50,100),(100,0)] if (parameters.points is None) else parameters.points)
         lstyle = _render_lstyle(lstyle, transform, animation.wrapper(points, postprocess=lambda pts: pts[0]), time)
         fstyle = _render_fstyle(fstyle, time)

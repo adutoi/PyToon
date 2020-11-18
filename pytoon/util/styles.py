@@ -21,36 +21,28 @@ from .colors   import color_parser, no_color
 
 
 
-def _render_dash(dash):
-    """ converts named dash type to dash tuple or validates given representation as iterable """
-    if   dash=="solid":  parsed_dash = tuple()
-    elif dash=="dotted": parsed_dash = (1,1)
-    elif dash=="dashed": parsed_dash = (4,4)
-    else:
-        try:
-            parsed_dash = tuple( valid_real_number((d, "dash length"), (lambda x: x>0, "positive")) for d in dash )
-        except (TypeError, ValueError):
-            raise ValueError( "dash descriptor is expected to be an iterable of positive float-convertibles, or valid textual descriptor: {}".format(repr(dash)) )
-        if len(parsed_dash)%2!=0:
-            raise ValueError( "dash descriptor array must have an even number of elements: {}".format(repr(dash)) )
-    return parsed_dash
+class style(struct):    # based on struct because member data *is* the public interface (freeform, then parsed and checked at time of concrete resolution)
+    """ provides some in-common methods for streamlining dealing with animated properties """
+    def has_animated(self):
+        """ answers whether the style has any animated components (not counting excluded ones) """
+        return any(is_animated(v) for k,v in as_dict(self).items() if k not in self._exclude)
+    def animated(self):
+        """ returns a copy where all components (except those excluded) are formally animated, even those that are constant """
+        descriptors = {k:animated(v) for k,v in as_dict(self).items() if k not in self._exclude}
+        return type(self)(self, **descriptors)    # copy with updates
 
-class linestyle(struct):
+
+
+class linestyle(style):
     """ rolls a color, weight, dash descriptor into a single structure """
+    _exclude = []    # used by base class, essentially means that all fields represent animatable properties
     def __init__(self, _lstyle=None, *, color=None, weight=None, dash=None):
         c, w, d = "black", 1, "solid"
         if _lstyle:  c, w, d = as_tuple(_lstyle("color", "weight", "dash"))
         if color  is not None:  c = color
         if weight is not None:  w = weight
         if dash   is not None:  d = dash
-        # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
         struct.__init__(self, color=c, weight=w, dash=d)
-    def has_animated(self):
-        """ answers whether the linestyle has any animated components """
-        return (is_animated(self.color) or is_animated(self.weight) or is_animated(self.dash))
-    def animated(self):
-        """ returns a copy where all components are formally animated, even those that are constant """
-        return linestyle(color=animated(self.color), weight=animated(self.weight), dash=animated(self.dash))
     def _populate_field(self, field, validators, allow_animated, _allow_recur=True):
         """ a private function that the parser static method can use to build linestyle objects; calls itself recursively """
         # takes a (tuple of) field descriptor(s), decides what it(they) describe(s), and assigns it(them) to appropriate field of the line style
@@ -64,7 +56,7 @@ class linestyle(struct):
                 try:
                     tmp = valid_weight(field, allow_animated)
                 except ValueError:
-                    if _allow_recur and not isinstance(field, str):   # strings give an infinite loop, and, if not parsed by render_color or _render_dash, then it is an error
+                    if _allow_recur and not isinstance(field, str):   # strings give an infinite loop, and, if not parsed by valid_color or valid_dash, then it is an error
                         try:
                             for fld in field:  self._populate_field(fld, validators, allow_animated, False)    # since it was not a primitive field, maybe it was a tuple of valid values
                         except (TypeError, ValueError):
@@ -79,10 +71,24 @@ class linestyle(struct):
             self.color = tmp
         return self    # the (modified) input object (for convenience)
     @staticmethod
+    def _render_dash(dash):
+        """ converts named dash type to dash tuple or validates given representation as iterable """
+        if   dash=="solid":  parsed_dash = tuple()
+        elif dash=="dotted": parsed_dash = (1,1)
+        elif dash=="dashed": parsed_dash = (4,4)
+        else:
+            try:
+                parsed_dash = tuple( valid_real_number((d, "dash length"), (lambda x: x>0, "positive")) for d in dash )
+            except (TypeError, ValueError):
+                raise ValueError( "dash descriptor is expected to be an iterable of positive float-convertibles, or valid textual descriptor: {}".format(repr(dash)) )
+            if len(parsed_dash)%2!=0:
+                raise ValueError( "dash descriptor array must have an even number of elements: {}".format(repr(dash)) )
+        return parsed_dash
+    @staticmethod
     def parser(render_color):
         """ provides a function that validates or builds linestyle stuctures, given a function that validates color or builds color structures """
         valid_color  = validator(render_color)    # render_color (passed in) validates color structures or promotes strings, perhaps converting to grayscale
-        valid_dash   = validator(_render_dash)
+        valid_dash   = validator(linestyle._render_dash)
         valid_weight = validator(lambda f: valid_real_number((f, "line weight"), (lambda x: x>=0, "non-negative"))) 
         def parse(style, _allow_animated=True):
             if is_animated(style):
@@ -136,9 +142,10 @@ def _parse_orientation(orientation):
 
 
 
-class fillstyle(struct):
+class fillstyle(style):
     """ rolls descriptors of a fill style into a single structure """
-    def __init__(self, _fstyle=None, *, _fill=None, **kwargs):    # Demanding _fill by name is sign not to use directly.  Users should use static methods to instantiate wo copying.
+    _exclude = ["fill"]    # used by base class, essentially means that only .fill does not represent animatable property
+    def __init__(self, _fstyle=None, *, _fill=None, **kwargs):    # _fill name is sign not to use directly.  Users should use static methods to instantiate wo copying.
         if _fstyle and _fill:
             raise RuntimeError("attempt to update fill type on copy is not interpretable ... use static methods instead of direct instantiation")
         if not (_fstyle or _fill):
@@ -152,15 +159,7 @@ class fillstyle(struct):
         else:
             descriptors = dict(kwargs)
             descriptors["fill"] = _fill
-        # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
         struct.__init__(self, **descriptors)
-    def has_animated(self):
-        """ answers whether the fillstyle has any animated components """
-        return any(is_animated(prop) for prop in as_tuple(self))    # does not matter if checks 'fill' field since never animated
-    def animated(self):
-        """ returns a copy where all components (except 'fill') are formally animated, even those that are constant """
-        descriptors = {k:animated(v) for k,v in as_dict(self).items() if k!="fill"}
-        return fillstyle(_fill=self.fill, **descriptors)
     @staticmethod
     def none():
         """ returns a structure that represents no fill """
