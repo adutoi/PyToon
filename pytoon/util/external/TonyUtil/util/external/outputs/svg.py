@@ -84,7 +84,6 @@ _objcolor  = lambda c,a,o:            '{color}{opacity}'.format(color=c, opacity
 gradcolor  = lambda p,c,a:            '\n  <stop offset="{percent}%" stop-color={color}/>'.format(percent=p, color=_objcolor(c,a,'stop'))
 
 fillnone   =                          'none'
-fillcolor  = lambda c,a:              _objcolor(c,a,'fill')
 fillgrad   = lambda i:                'url(#{identifier})'.format(identifier=i)
 
 _rad_sub   =                          'cx="{p}%" cy="{p}%" fx="{p}%" fy="{p}%"'.format(p=50)
@@ -141,24 +140,25 @@ def _xml_tag(tag, props, duration):
           <{tag}{constant}/>
         """)(tag=tag, constant=constant)
 
-def _shape_props(color, alpha, weight, dash, fill):
+def _shape_props(line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha):
     return {
-        "stroke":            color,
-        "stroke-opacity":    alpha,
-        "stroke-width":      weight,
-        "stroke-dasharray":  dash,
-        "fill":              fill
+        "stroke":            line_rgb,
+        "stroke-opacity":    line_alpha,
+        "stroke-width":      line_weight,
+        "stroke-dasharray":  line_dash,
+        "fill":              fill_rgb,
+        "fill-opacity":      fill_alpha
     }
 
-def path(points, color, alpha, weight, dash, fill, duration=None):
-    props = _shape_props(color, alpha, weight, dash, fill)
+def path(points, line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha, duration=None):
+    props = _shape_props(line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha)
     props.update({
         "d": points
     })
     return _xml_tag("path", props, duration)
 
-def circle(center_x, center_y, radius, color, alpha, weight, dash, fill, duration=None):
-    props = _shape_props(color, alpha, weight, dash, fill)
+def circle(center_x, center_y, radius, line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha, duration=None):
+    props = _shape_props(line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha)
     props.update({
         "r":  radius,
         "cx": center_x,

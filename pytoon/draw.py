@@ -126,16 +126,12 @@ class _canvas(object):
             raise RuntimeError("animated property given to resolve single time point")
         return lstyle        
     def _valid_fstyle(self, fstyle):
+        fstyle = self._parsers.fillstyle(fstyle)
         if self._animated:
-            if util.is_animated(fstyle):
-                return [(t, self._parsers.fillstyle(sty)) for t,sty in fstyle]
-            else:
-                return util.animated(self._parsers.fillstyle(fstyle))
-        else:
-            if util.is_animated(fstyle):
-                raise RuntimeError("animated fill given to resolve single time point")
-            else:
-                return self._parsers.fillstyle(fstyle)
+            fstyle = fstyle.animated()
+        elif fstyle.has_animated():
+            raise RuntimeError("animated property given to resolve single time point")
+        return fstyle
     def _valid_number(self, number, name, conditional):
         if self._animated:
             if util.is_animated(number):

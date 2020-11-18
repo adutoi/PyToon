@@ -91,14 +91,13 @@ class renderer_base(base.renderer):
         if duration is None:  self._assert_no_controls()
         self._duration = duration
     def path(self, lstyle, fstyle, points, toggle):
-        rgb, alpha, weight, dash = self._parse_line(lstyle)
+        line_rgb, line_alpha, line_weight, line_dash = self._parse_line(lstyle)
+        fill_rgb, fill_alpha = self._parse_fill(fstyle)
         if self._duration is None:
-            fill   = self._parse_fill(fstyle)
             points = self._parse_points(points)
         else:
-            fill   = [(_flt(t),self._parse_fill(sty))   for t,sty in fstyle]
             points = [(_flt(t),self._parse_points(pts)) for t,pts in points]
-        self._main += svg_code.path(points, rgb, alpha, weight, dash, fill, self._duration)
+        self._main += svg_code.path(points, line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha, self._duration)
     def image(self, filename, size, position, rotate, toggle):
         img = image_file(filename)
         x, y = position
@@ -119,9 +118,9 @@ class renderer_base(base.renderer):
     def circle_deprecated(self, lstyle, fstyle, center, radius, toggle):
         return self._circle_as_path(lstyle, fstyle, center, radius, toggle)
     def circle(self, lstyle, fstyle, center, radius, toggle):
-        rgb, alpha, weight, dash = self._parse_line(lstyle)
+        line_rgb, line_alpha, line_weight, line_dash = self._parse_line(lstyle)
+        fill_rgb, fill_alpha = self._parse_fill(fstyle)
         if self._duration is None:
-            fill   = self._parse_fill(fstyle)
             center_x, center_y = self._parse_point(center)
             self._adjust_boundaries(center_x+radius, center_y+radius)
             self._adjust_boundaries(center_x-radius, center_y-radius)
@@ -129,14 +128,13 @@ class renderer_base(base.renderer):
             center_x, center_y = _flt(center_x), _flt(center_y)
         else:
             # minor bug here since boundaries never adjusted (user can always put in phantom polygon)
-            fill   = [(_flt(t),self._parse_fill(sty))  for t,sty in fstyle]
             radius = [(_flt(t),_flt(rad))              for t,rad in radius]
             center = [(_flt(t),self._parse_point(ctr)) for t,ctr in center]
             times, centers = zip(*center)
             center_x, center_y = zip(*centers)
             center_x = [("",center_x[0])] if _same(center_x) else list(zip(times,center_x))
             center_y = [("",center_y[0])] if _same(center_y) else list(zip(times,center_y))
-        self._main += svg_code.circle(center_x, center_y, radius, rgb, alpha, weight, dash, fill, self._duration)
+        self._main += svg_code.circle(center_x, center_y, radius, line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha, self._duration)
     def _parse_point(self, point):
         x, y = _map_displacement(*point)
         self._adjust_boundaries(x, y)
@@ -200,28 +198,49 @@ class renderer_base(base.renderer):
                 return rgb, alpha, weight, dash
     def _parse_fill(self, fstyle):
         self._def_id += 1    # does not matter if we burn an unused number
-        if   fstyle.fill=="none":
-            return svg_code.fillnone
+        if fstyle.fill=="none":
+            return svg_code.fillnone, None
         elif fstyle.fill=="solid":
-            if (fstyle.color.rgb=="none") or (fstyle.color.a==0):
-                return svg_code.fillnone
+            if self._duration is None:
+                if (fstyle.color.rgb=="none") or (fstyle.color.a==0):
+                    return svg_code.fillnone, None
+                else:
+                    rgb    = fstyle.color.rgb
+                    alpha  = None if (fstyle.color.a is None) else _flt(fstyle.color.a)
+                    return rgb, alpha
             else:
-                return svg_code.fillcolor(fstyle.color.rgb, fstyle.color.a)
-        elif fstyle.fill=="radialgradient":
-            identifier = "RadialGradient{}".format(self._def_id)
-            colors  = svg_code.gradcolor(  0, fstyle.beg_color.rgb, fstyle.beg_color.a)
-            colors += svg_code.gradcolor(100, fstyle.end_color.rgb, fstyle.end_color.a)
-            self._defs += svg_code.rad_grad(identifier, fstyle.radius, colors)
-            return svg_code.fillgrad(identifier)
-        elif fstyle.fill=="lineargradient":
-            colors = "".join(svg_code.gradcolor(c.percent, c.color.rgb, c.color.a) for c in fstyle.colors)
-            if fstyle.orientation=="down-up" or fstyle.orientation=="up-down":  x1, y1, x2, y2 = 50, 100,  50,  0
-            else:                                                               x1, y1, x2, y2 =  0,  50, 100, 50
-            identifier = "LinearGradient{}".format(self._def_id)
-            self._defs += svg_code.lin_grad(identifier, x1, y1, x2, y2, colors)
-            return svg_code.fillgrad(identifier)
-        else:
-            raise NotImplementedError(str(fstyle.fill))    # fstyle.fill should already be a string, but just in case
+                rgb   = []
+                alpha = []
+                for t,color in fstyle.color:
+                    rgb   += [(t,color.rgb)]
+                    alpha += [(t,color.a)]
+                if   (len(fstyle.color)==1) and ((rgb[0][1]=="none") or (alpha[0][1]==0)):
+                    return svg_code.fillnone, None
+                else:
+                    rgb_values = [v for t,v in rgb]
+                    if "none" in rgb_values:
+                        raise ValueError("cannot set animated RGB value to 'none'; use alpha channel to achieve this effect")
+                    if (len(alpha)==1) and (alpha[0][1] is None):
+                        alpha = None
+                    else:
+                        alpha = [(t, "1" if (a is None) else _flt(a)) for t,a in alpha]    # if animated need explicit value (because not off)
+                    return rgb, alpha
+        if False:
+            if fstyle.fill=="radialgradient":
+                identifier = "RadialGradient{}".format(self._def_id)
+                colors  = svg_code.gradcolor(  0, fstyle.beg_color.rgb, fstyle.beg_color.a)
+                colors += svg_code.gradcolor(100, fstyle.end_color.rgb, fstyle.end_color.a)
+                self._defs += svg_code.rad_grad(identifier, fstyle.radius, colors)
+                return svg_code.fillgrad(identifier)
+            elif fstyle.fill=="lineargradient":
+                colors = "".join(svg_code.gradcolor(c.percent, c.color.rgb, c.color.a) for c in fstyle.colors)
+                if fstyle.orientation=="down-up" or fstyle.orientation=="up-down":  x1, y1, x2, y2 = 50, 100,  50,  0
+                else:                                                               x1, y1, x2, y2 =  0,  50, 100, 50
+                identifier = "LinearGradient{}".format(self._def_id)
+                self._defs += svg_code.lin_grad(identifier, x1, y1, x2, y2, colors)
+                return svg_code.fillgrad(identifier)
+            else:
+                raise NotImplementedError(str(fstyle.fill))    # fstyle.fill should already be a string, but just in case
     def _adjust_boundaries(self, x, y):
         xmin, xmax, ymin, ymax = self._dims
         xmin = min(xmin, x)

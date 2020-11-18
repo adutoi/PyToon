@@ -154,6 +154,13 @@ class fillstyle(struct):
             descriptors["fill"] = _fill
         # These variables *are* the public interface (freeform, then parsed and checked at time of concrete resolution)
         struct.__init__(self, **descriptors)
+    def has_animated(self):
+        """ answers whether the fillstyle has any animated components """
+        return any(is_animated(prop) for prop in as_tuple(self))    # does not matter if checks 'fill' field since never animated
+    def animated(self):
+        """ returns a copy where all components (except 'fill') are formally animated, even those that are constant """
+        descriptors = {k:animated(v) for k,v in as_dict(self).items() if k!="fill"}
+        return fillstyle(_fill=self.fill, **descriptors)
     @staticmethod
     def none():
         """ returns a structure that represents no fill """
@@ -173,6 +180,7 @@ class fillstyle(struct):
     @staticmethod
     def parser(render_color):
         """ provides a function that validates or builds fill stuctures, given a function that validates color or builds color structures """
+        valid_color  = validator(render_color)    # render_color (passed in) validates color structures or promotes strings, perhaps converting to grayscale
         def parse(style):
             try:
                 _ = style.fill
@@ -180,12 +188,12 @@ class fillstyle(struct):
                 if style in no_color:
                     parsed_style = fillstyle.none()
                 else:
-                    parsed_style = fillstyle.solid(render_color(style))
+                    parsed_style = fillstyle.solid(color=valid_color(style))
             else:
                 if   style.fill=="none":
                     parsed_style = fillstyle.none()
                 elif style.fill=="solid":
-                    parsed_style = fillstyle.solid(render_color(style.color))
+                    parsed_style = fillstyle.solid(color=valid_color(style.color))
                 elif style.fill=="radialgradient":
                     style_begin = "none" if (style.begin in no_color) else style.begin
                     style_end   = "none" if (style.end   in no_color) else style.end
