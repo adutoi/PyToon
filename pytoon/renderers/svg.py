@@ -28,14 +28,25 @@ _map_displacement = lambda x,y: (x,-y)                # Screen coordinates are u
 _map_rotation     = lambda a:   -a                    # ... and, consequently, so is the sense/sign of rotation.
 _flt              = lambda x:   "" if (x is None) else "{:.5g}".format(x)    # defend file size against absurd precision
 
-def _same(values):
+def _same(values, compare):
     value = values[0]
     try:
-        equal = [float_eq(v,value) for v in values]
+        equal = [compare(v,value) for v in values]
     except TypeError:
         return False
     else:
         return all(equal)
+
+def _compress(animated, floats=False):
+    compare = float_eq if floats else lambda a,b: a==b
+    string  = _flt if floats else str
+    times, values = zip(*animated)
+    times = [_flt(t) for t in times]
+    if _same(values, compare):
+        return [(None, string(values[0]))]
+    else:
+        values = [string(v) for v in values]
+        return list(zip(times,values))
 
 
 
@@ -128,12 +139,12 @@ class renderer_base(base.renderer):
             center_x, center_y = _flt(center_x), _flt(center_y)
         else:
             # minor bug here since boundaries never adjusted (user can always put in phantom polygon)
-            radius = [(_flt(t),_flt(rad))              for t,rad in radius]
-            center = [(_flt(t),self._parse_point(ctr)) for t,ctr in center]
+            radius = _compress(radius, floats=True)
             times, centers = zip(*center)
+            centers = [self._parse_point(ctr) for ctr in centers]
             center_x, center_y = zip(*centers)
-            center_x = [("",center_x[0])] if _same(center_x) else list(zip(times,center_x))
-            center_y = [("",center_y[0])] if _same(center_y) else list(zip(times,center_y))
+            center_x = _compress(list(zip(times,center_x)), floats=True)
+            center_y = _compress(list(zip(times,center_y)), floats=True)
         self._main += svg_code.circle(center_x, center_y, radius, line_rgb, line_alpha, line_weight, line_dash, fill_rgb, fill_alpha, self._duration)
     def _parse_point(self, point):
         x, y = _map_displacement(*point)
@@ -186,15 +197,16 @@ class renderer_base(base.renderer):
                 rgb_values = [v for t,v in rgb]
                 if "none" in rgb_values:
                     raise ValueError("cannot set animated RGB value to 'none'; use alpha channel to achieve this effect")
-                if (len(alpha)==1) and (alpha[0][1] is None):
+                rgb = _compress(rgb)
+                alpha = [(t, 1 if (a is None) else a) for t,a in alpha]    # need numerically unless off completely
+                alpha = _compress(alpha, floats=True)
+                if (len(alpha)==1 and alpha[0][1]=="1"):
                     alpha = None
-                else:
-                    alpha = [(t, "1" if (a is None) else _flt(a)) for t,a in alpha]    # if animated need explicit value (because not off)
-                weight = [(t,_flt(w)) for t,w in lstyle.weight]
-                if (len(lstyle.dash)==1) and (len(lstyle.dash[0][1])==0):
+                weight = _compress(lstyle.weight, floats=True)
+                dash = [(t, svg_code.dash(_flt(d*lstyle.weight[0][1]) for d in dd) ) for t,dd in lstyle.dash]
+                dash = _compress(dash)
+                if (len(dash)==1 and dash[0][1]==""):    # a little dirty bc relies on knowing how dash is rendered
                     dash = None
-                else:
-                    dash = [(t, svg_code.dash(_flt(d*lstyle.weight[0][1]) for d in dd) ) for t,dd in lstyle.dash]
                 return rgb, alpha, weight, dash
     def _parse_fill(self, fstyle):
         self._def_id += 1    # does not matter if we burn an unused number
@@ -225,10 +237,12 @@ class renderer_base(base.renderer):
                     rgb_values = [v for t,v in rgb]
                     if "none" in rgb_values:
                         raise ValueError("cannot set animated RGB value to 'none'; use alpha channel to achieve this effect")
-                    if (len(alpha)==1) and (alpha[0][1] is None):
+                    rgb = _compress(rgb)
+
+                    alpha = [(t, 1 if (a is None) else a) for t,a in alpha]    # need numerically unless off completely
+                    alpha = _compress(alpha, floats=True)
+                    if (len(alpha)==1 and alpha[0][1]=="1"):
                         alpha = None
-                    else:
-                        alpha = [(t, "1" if (a is None) else _flt(a)) for t,a in alpha]    # if animated need explicit value (because not off)
                     return rgb, alpha
         if False:
             if fstyle.fill=="radialgradient":
