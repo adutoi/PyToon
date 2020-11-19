@@ -48,9 +48,9 @@ class renderer(object):
             points = [begin,end]
         else:
             try:
-                begin  = util.deanimated(begin)
-                end    = util.deanimated(end)
-                points = util.animated([begin,end])
+                begin_tmp  = util.deanimated(begin)
+                end_tmp    = util.deanimated(end)
+                points = util.animated([begin_tmp,end_tmp])
             except ValueError:
                 b_times, b = zip(*begin)
                 e_times, e = zip(*end)
