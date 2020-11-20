@@ -16,6 +16,6 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .TonyUtil.util import struct, as_tuple, as_dict, int_round, named_colors, shell, code_template
+from .TonyUtil.util import struct, as_tuple, as_dict, int_round, named_colors, color_wheel, shell, code_template
 from .TonyUtil.util import svg        as svg_code
 from .TonyUtil.util import javascript as  js_code

@@ -16,10 +16,4 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .external   import svg_code, js_code    # would be free-standing module files, so import directly to this level
-from .general    import struct, as_tuple, as_dict, int_round, echo, nested, float_eq, valid_real_number, valid_point, shell, code_template
-from .varval     import variable_evaluator
-from .animated   import is_animated, animated, deanimated
-from .colors     import color_wheel, colordef, gray_rgb, color_parser
-from .styles     import linestyle, fillstyle, style_parsers
-from .image      import image_file
+from .raster import rasterize

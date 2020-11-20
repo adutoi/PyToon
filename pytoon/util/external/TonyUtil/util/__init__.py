@@ -19,4 +19,5 @@
 from .misc.struct           import struct, as_tuple, as_dict
 from .misc.int_round        import int_round
 from .misc.named_colors     import named_colors
+from .misc.color_wheel      import color_wheel
 from .external.outputs.code import template as code_template

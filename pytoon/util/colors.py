@@ -15,7 +15,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from .external import named_colors
+from .external import named_colors, color_wheel
 from .general  import struct, int_round, valid_real_number
 
 no_color = (None, "none", "transparent", "clear")    # also used in styles.py (None should be interpreted as "not specified", whereas "none" is explicitly no color)
