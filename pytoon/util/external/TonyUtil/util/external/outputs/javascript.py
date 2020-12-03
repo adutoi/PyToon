@@ -17,9 +17,9 @@
 #
 from .external.outputs.code import template as code
 
-# Right now, a lot of this does very specific tasks (supports animations and pagination) in svg.
+# Right now, this stuff does very specific tasks (supports animations in svg).
 # Eventually, I should abstract the more general tasks and leave them here and move anything
-# very tailored to pytoon to that code
+# very tailored to pytoon, etc to that code.
 
 
 
@@ -127,18 +127,6 @@ _animation_functions_in_svg = code("""
   }};
 """)
 
-_pagination_functions = code("""
-  function PrevDoc()
-  {{
-    window.location.href = "{prev_doc}";
-  }};
-
-  function NextDoc()
-  {{
-    window.location.href = "{next_doc}";
-  }};
-""")
-
 _animation_buttons_in_svg = {
     "declare": code("""
       var pauseButton = null;
@@ -155,8 +143,6 @@ _animation_buttons_in_svg = {
 
 _animation_listeners  = code("if({toggleKeys}){{Toggle();}}else if({resetKeys}){{Reset(0);}}else if({backKeys}){{FrameBackward();}}else if({forwardKeys}){{FrameForward();}}")
 
-_pagination_listeners = code("if({prevKeys}){{PrevDoc();}}else if({nextKeys}){{NextDoc();}}")
-
 
 
 # Assemble the javascript insertion
@@ -165,29 +151,24 @@ svg_credit = """\
 The scripting to implement the "play/pause" button was adapted with gratitude from an example found online,\nwritten by Doug Schepers [doug@schepers.cc], November 2004.
 """
 
-def script_in_svg(*, animate=None, paginate=None):    # .control members are dictionaries of form {"toggleKeys": ["space"], "resetKeys": ... }
-    if not (animate or paginate):
-        return "", ""
+def script_in_svg(*, animate=None):    # .control members are dictionaries of form {"toggleKeys": ["space"], "resetKeys": ... }
+    if not animate:
+        return "", ""    # I think this is deprecated and can assume non-None argument
     declare_vars = []
     set_vars     = []
     initialize   = []
     listeners    = []
     functions    = []
-    if animate:
-        if animate.controls is not None:
-            controls = animate.controls
-        else:
-            controls = {"toggleKeys": ["space","B"], "resetKeys": ["R","escape","F5","P"], "backKeys": ["left-arrow"], "forwardKeys": ["right-arrow"]}
-        controls = { k:_javascript_keys(v) for k,v in controls.items() }
-        declare_vars += [ _animation_buttons_in_svg["declare"]() ]
-        set_vars     += [ _animation_buttons_in_svg["set"]()     ]
-        initialize   += [ _animation_buttons_in_svg["init"]()    ]
-        listeners    += [ _animation_listeners(**controls) ]
-        functions    += [ _animation_functions_in_svg(delta=animate.delta) ]
-    if paginate:
-        controls = { k:_javascript_keys(v) for k,v in paginate.controls.items() }
-        listeners    += [ _pagination_listeners(**controls) ]
-        functions    += [ _pagination_functions(prev_doc=paginate.prev_doc, next_doc=paginate.next_doc) ]
+    if animate.controls is not None:
+        controls = animate.controls
+    else:
+        controls = {"toggleKeys": ["space","B"], "resetKeys": ["R","escape","F5","P"], "backKeys": ["left-arrow"], "forwardKeys": ["right-arrow"]}
+    controls = { k:_javascript_keys(v) for k,v in controls.items() }
+    declare_vars += [ _animation_buttons_in_svg["declare"]() ]
+    set_vars     += [ _animation_buttons_in_svg["set"]()     ]
+    initialize   += [ _animation_buttons_in_svg["init"]()    ]
+    listeners    += [ _animation_listeners(**controls) ]
+    functions    += [ _animation_functions_in_svg(delta=animate.delta) ]
     jscode = _javascript_in_svg(
         variables = "".join(declare_vars),
         listeners = _initialize_listeners_in_svg(set_vars, listeners, initialize),

@@ -241,7 +241,3 @@ def frame(*, filename=None, image_code=None, duration=None, index=None, count=No
         return external_image(    filename=filename, animate=animate)
     else:
         return embedded_image(image_code=image_code, animate=animate)
-
-
-
-# code snippets for "multipage" svgs
