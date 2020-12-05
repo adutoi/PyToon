@@ -21,6 +21,7 @@ from ..line_art  import polygon
 from ..animation import animated
 
 
+# derivations of some formulas found in ./notes/raster.pdf
 
 def rasterize(rgba_Dt, xdim=(-1,1,20), ydim=(-1,1,20), pixel_aspect_ratio=1, width=100):
     # rgba_Dt should be a function of x and y that returns a 2-tuple of rgbs and Dt, where
